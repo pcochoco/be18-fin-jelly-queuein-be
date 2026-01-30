@@ -104,17 +104,19 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
                 .on(category.id.eq(asset.category.id));
 
         List<RawUserReservationResponseDto> content = contentQuery
+                .where(builder)
                 .orderBy(reservation.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        JPAQuery<Long> totalQuery = query.select(reservation.countDistinct())
+        JPAQuery<Long> totalQuery = query.select(reservation.count())
                 .from(reservation)
                 .join(asset)
                 .on(asset.id.eq(reservation.asset.id))
                 .leftJoin(category)
-                .on(category.id.eq(asset.category.id));
+                .on(category.id.eq(asset.category.id))
+                .where(builder);
 
         Long total = totalQuery.fetchOne();
 

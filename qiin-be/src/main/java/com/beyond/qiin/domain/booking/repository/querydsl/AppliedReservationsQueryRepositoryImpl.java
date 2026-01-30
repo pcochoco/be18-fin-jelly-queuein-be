@@ -58,29 +58,13 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
             builder.and(respondent.userName.containsIgnoreCase(condition.getRespondentName()));
         }
 
-        // 승인 여부
-        if (condition.getIsApproved() != null) {
-            boolean approved = Boolean.parseBoolean(condition.getIsApproved());
-            builder.and(reservation.isApproved.eq(approved));
-        }
+
 
         // 자원명
         if (condition.getAssetName() != null) {
             builder.and(asset.name.containsIgnoreCase(condition.getAssetName()));
         }
 
-        // 자원 상태 (assetStatus) 필터링
-        if (condition.getAssetStatus() != null) {
-            String raw = condition.getAssetStatus().trim();
-
-            try {
-                AssetStatus statusEnum = AssetStatus.valueOf(raw.toUpperCase());
-
-                builder.and(asset.status.eq(statusEnum.getCode()));
-
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
 
         if (condition.getCategoryId() != null) {
             builder.and(asset.category.id.eq(condition.getCategoryId()));
