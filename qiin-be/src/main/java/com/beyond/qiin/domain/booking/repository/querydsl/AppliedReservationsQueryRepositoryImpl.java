@@ -38,7 +38,14 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
         builder.and(reservation.isApplied.eq(true)); // 신청된 경우
 
         // 날짜(Instant)
-        if (condition.getDate() != null) {
+        //시작, 끝 모두 있는 경우
+        if (condition.getFrom() != null && condition.getTo() != null) {
+            builder.and(
+                    reservation.startAt.lt(condition.getTo().atZone(zone).toInstant())
+                            .and(reservation.endAt.gt(condition.getFrom().atZone(zone).toInstant()))
+            );
+        }
+        else { //date만 사용하는 경우
             LocalDate date = condition.getDate();
 
             Instant start = date.atStartOfDay(ZoneId.of("Asia/Seoul")).toInstant();
