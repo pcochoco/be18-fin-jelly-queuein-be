@@ -7,7 +7,6 @@ import com.beyond.qiin.domain.iam.entity.QUser;
 import com.beyond.qiin.domain.inventory.entity.QAsset;
 import com.beyond.qiin.domain.inventory.entity.QAssetClosure;
 import com.beyond.qiin.domain.inventory.entity.QCategory;
-import com.beyond.qiin.domain.inventory.enums.AssetStatus;
 import com.beyond.qiin.domain.inventory.enums.AssetType;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
@@ -58,13 +57,10 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
             builder.and(respondent.userName.containsIgnoreCase(condition.getRespondentName()));
         }
 
-
-
         // 자원명
         if (condition.getAssetName() != null) {
             builder.and(asset.name.containsIgnoreCase(condition.getAssetName()));
         }
-
 
         if (condition.getCategoryId() != null) {
             builder.and(asset.category.id.eq(condition.getCategoryId()));
