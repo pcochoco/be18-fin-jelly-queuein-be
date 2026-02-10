@@ -38,22 +38,21 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
         builder.and(reservation.applicant.id.eq(userId));
 
         // 날짜(Instant)
-        // 시작
-        if (condition.getFromDate() != null) {
+        // 시작, 끝이 둘다 있는 경우 날짜를 확인
+        if (condition.getFromDate() != null && condition.getToDate() != null) {
+
             Instant from = condition
                     .getFromDate()
                     .atStartOfDay(ZoneId.of("Asia/Seoul"))
                     .toInstant();
-            builder.and(reservation.startAt.goe(from));
-        }
 
-        // 종료
-        if (condition.getToDate() != null) {
             Instant to = condition
                     .getToDate()
                     .plusDays(1)
                     .atStartOfDay(ZoneId.of("Asia/Seoul"))
                     .toInstant();
+
+            builder.and(reservation.startAt.goe(from));
             builder.and(reservation.startAt.lt(to));
         }
 
@@ -103,12 +102,16 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
                 .leftJoin(category)
                 .on(category.id.eq(asset.category.id));
 
+        BooleanBuilder contentBuilder = new BooleanBuilder(builder);
+
         List<RawUserReservationResponseDto> content = contentQuery
-                .where(builder)
+                .where(contentBuilder)
                 .orderBy(reservation.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
+
+        BooleanBuilder countBuilder = new BooleanBuilder(builder);
 
         JPAQuery<Long> totalQuery = query.select(reservation.count())
                 .from(reservation)
@@ -116,10 +119,11 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
                 .on(asset.id.eq(reservation.asset.id))
                 .leftJoin(category)
                 .on(category.id.eq(asset.category.id))
-                .where(builder);
+                .where(countBuilder);
 
         Long total = totalQuery.fetchOne();
+        long safeTotal = total != null ? total : 0L;
 
-        return new PageImpl<>(content, pageable, total);
+        return new PageImpl<>(content, pageable, safeTotal);
     }
 }

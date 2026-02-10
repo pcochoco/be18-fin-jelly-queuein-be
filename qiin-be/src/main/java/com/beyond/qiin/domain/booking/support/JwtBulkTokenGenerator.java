@@ -20,7 +20,7 @@ public class JwtBulkTokenGenerator implements CommandLineRunner {
     @Override
     public void run(String... args) {
         try {
-            // ⭐ 컨테이너 내부 경로 (volume으로 호스트와 연결됨)
+            // 컨테이너 내부 경로 (volume으로 호스트와 연결됨)
             Path output = Path.of("/tmp/user_tokens.csv");
 
             // 헤더 작성 (기존 파일 있으면 덮어씀)

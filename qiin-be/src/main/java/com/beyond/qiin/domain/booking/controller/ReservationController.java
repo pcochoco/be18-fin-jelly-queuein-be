@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -202,7 +203,7 @@ public class ReservationController {
     public ResponseEntity<PageResponseDto<GetUserReservationResponseDto>> getUserReservations(
             @AccessToken final String accessToken,
             @Valid @ModelAttribute GetUserReservationSearchCondition condition,
-            Pageable pageable) {
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
 
         final Long userId = jwtTokenProvider.getUserId(accessToken);
 
