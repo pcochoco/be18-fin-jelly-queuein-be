@@ -72,3 +72,6 @@ Temporary Items
 
 gradle.properties
 /qiin-be/src/main/generated/
+
+### user token csv ###
+/qiin-be/output

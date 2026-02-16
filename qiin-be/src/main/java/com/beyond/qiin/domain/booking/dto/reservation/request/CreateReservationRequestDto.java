@@ -15,10 +15,6 @@ import lombok.NoArgsConstructor;
 @Getter
 public class CreateReservationRequestDto {
 
-    // 신청자
-    @NotNull
-    private Long applicantId;
-
     // 예약 시작 시간
     @NotNull
     private Instant startAt;

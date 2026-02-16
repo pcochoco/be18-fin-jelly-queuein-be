@@ -90,13 +90,15 @@ public class InstantConfirmReservationTest {
                 .build();
 
         User applicant = User.builder().userName("신청자").build();
+
         Asset asset = Asset.builder().name("회의실 A").build();
+
         List<User> attendants = List.of(
                 User.builder().userName("참석자1").build(),
                 User.builder().userName("참석자2").build());
 
-        when(assetCommandService.getAssetById(assetId)).thenReturn(asset);
         when(userReader.findById(userId)).thenReturn(applicant);
+        when(assetCommandService.getAssetById(assetId)).thenReturn(asset);
         doNothing().when(userReader).validateAllExist(requestDto.getAttendantIds());
         when(userReader.findAllByIds(requestDto.getAttendantIds())).thenReturn(attendants);
         when(assetCommandService.isAvailable(assetId)).thenReturn(true);

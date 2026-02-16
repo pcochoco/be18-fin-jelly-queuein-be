@@ -1,6 +1,5 @@
 package com.beyond.qiin.domain.booking.service.command;
 
-import com.beyond.qiin.common.annotation.DistributedLock;
 import com.beyond.qiin.domain.accounting.service.command.UsageHistoryCommandService;
 import com.beyond.qiin.domain.booking.dto.reservation.request.ConfirmReservationRequestDto;
 import com.beyond.qiin.domain.booking.dto.reservation.request.CreateReservationRequestDto;
@@ -88,9 +87,11 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
     // 선착순 예약 분산락 키 : 자원 id로만 두기 제한적
     @Override
     @Transactional
-    @DistributedLock(
-            key =
-                    "'reservation:' + #assetId + ':' + #createReservationRequestDto.startAt + ':' + #createReservationRequestDto.endAt")
+    //    @DistributedLock(
+    //            key =
+    //                    "'reservation:' + #assetId + ':' + #createReservationRequestDto.startAt + ':' +
+    // #createReservationRequestDto.endAt")
+
     public ReservationResponseDto instantConfirmReservation(
             final Long userId, final Long assetId, final CreateReservationRequestDto createReservationRequestDto) {
 
