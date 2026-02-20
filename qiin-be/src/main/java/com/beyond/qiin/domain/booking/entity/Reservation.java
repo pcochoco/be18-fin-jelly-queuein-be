@@ -7,19 +7,7 @@ import com.beyond.qiin.domain.booking.exception.ReservationErrorCode;
 import com.beyond.qiin.domain.booking.exception.ReservationException;
 import com.beyond.qiin.domain.iam.entity.User;
 import com.beyond.qiin.domain.inventory.entity.Asset;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +30,11 @@ import org.hibernate.annotations.SQLRestriction;
             @Index(name = "idx_reservation_applicant_id", columnList = "applicant_id"),
             @Index(name = "idx_reservation_respondent_id", columnList = "respondent_id"),
             @Index(name = "idx_reservation_asset_id", columnList = "asset_id")
+        },
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_asset_time",
+                    columnNames = {"asset_id", "start_at", "end_at"})
         })
 @AttributeOverride(name = "id", column = @Column(name = "reservation_id"))
 @SQLRestriction("deleted_at is null")
