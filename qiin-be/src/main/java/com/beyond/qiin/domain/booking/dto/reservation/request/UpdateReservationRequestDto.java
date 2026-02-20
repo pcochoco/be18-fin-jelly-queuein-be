@@ -1,5 +1,7 @@
 package com.beyond.qiin.domain.booking.dto.reservation.request;
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -20,7 +22,10 @@ public class UpdateReservationRequestDto {
 
     private String description;
 
+    @FutureOrPresent // 과거 시간 불가
     private Instant startAt;
+
+    @Future // 미래시간 가능
     private Instant endAt;
 
     @Builder.Default
