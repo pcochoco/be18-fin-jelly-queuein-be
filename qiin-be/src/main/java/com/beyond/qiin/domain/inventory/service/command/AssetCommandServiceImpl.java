@@ -299,4 +299,10 @@ public class AssetCommandServiceImpl implements AssetCommandService {
         }
         return true;
     }
+
+    // 비관적 락을 통한 조회 - 예약 시 겹침 확인에 대한 동시 접근 차단
+    @Transactional
+    public Asset findByIdWithLock(Long assetId) {
+        return assetJpaRepository.findByIdForUpdate(assetId).orElseThrow(AssetException::notFound);
+    }
 }
