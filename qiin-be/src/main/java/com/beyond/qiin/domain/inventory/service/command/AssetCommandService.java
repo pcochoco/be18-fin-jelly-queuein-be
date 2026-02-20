@@ -29,6 +29,6 @@ public interface AssetCommandService {
     // 자원 사용 가능 여부
     boolean isAvailable(Long assetId);
 
-    //자원별 비관적 락 부여 조회 (예약의 범위 겹침에 대한 동시 접근 차단)
+    // 자원별 비관적 락 부여 조회 (예약의 범위 겹침에 대한 동시 접근 차단)
     Asset findByIdWithLock(Long assetId);
 }

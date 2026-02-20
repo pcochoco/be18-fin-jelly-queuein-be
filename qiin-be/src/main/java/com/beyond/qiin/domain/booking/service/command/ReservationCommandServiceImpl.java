@@ -95,7 +95,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
     public ReservationResponseDto instantConfirmReservation(
             final Long userId, final Long assetId, final CreateReservationRequestDto createReservationRequestDto) {
 
-        Asset asset = assetCommandService.findByIdWithLock(assetId); //자원에 대한 비관적 락 획득
+        Asset asset = assetCommandService.findByIdWithLock(assetId); // 자원에 대한 비관적 락 획득
         User applicant = userReader.findById(userId);
         userReader.validateAllExist(createReservationRequestDto.getAttendantIds()); // 참여자 목록의 사용자들이 모두 존재하는지에 대한 확인
         List<User> attendantUsers = userReader.findAllByIds(createReservationRequestDto.getAttendantIds());
