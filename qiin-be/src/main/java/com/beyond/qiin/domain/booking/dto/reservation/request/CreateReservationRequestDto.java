@@ -19,12 +19,12 @@ public class CreateReservationRequestDto {
 
     // 예약 시작 시간
     @NotNull
-    @FutureOrPresent //과거 시간 예약 불가 
+    @FutureOrPresent // 과거 시간 예약 불가
     private Instant startAt;
 
     // 예약 종료 시간
     @NotNull
-    @Future //미래 시간 가능
+    @Future // 미래 시간 가능
     private Instant endAt;
 
     // 예약 설명

@@ -22,10 +22,10 @@ public class UpdateReservationRequestDto {
 
     private String description;
 
-    @FutureOrPresent //과거 시간 불가
+    @FutureOrPresent // 과거 시간 불가
     private Instant startAt;
 
-    @Future //미래시간 가능
+    @Future // 미래시간 가능
     private Instant endAt;
 
     @Builder.Default
