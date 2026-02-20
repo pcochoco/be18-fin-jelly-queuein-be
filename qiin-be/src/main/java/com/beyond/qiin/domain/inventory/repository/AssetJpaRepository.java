@@ -2,7 +2,11 @@ package com.beyond.qiin.domain.inventory.repository;
 
 import com.beyond.qiin.domain.inventory.entity.Asset;
 import java.util.Optional;
+
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -16,4 +20,8 @@ public interface AssetJpaRepository extends JpaRepository<Asset, Long> {
     boolean existsByCategoryId(Long categoryId);
 
     boolean existsByNameAndIdNot(String name, Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Asset a where a.id = :assetId")
+    Optional<Asset> findByIdForUpdate(Long assetId);
 }
