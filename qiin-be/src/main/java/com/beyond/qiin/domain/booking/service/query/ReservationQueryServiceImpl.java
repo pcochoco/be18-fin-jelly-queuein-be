@@ -87,15 +87,6 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
         // 사용자 있는지 확인
         userReader.findById(userId);
 
-        log.info(
-                "date={}, status={}, approved={}, assetName={}, assetType={}, layerZero={}",
-                condition.getDate(),
-                condition.getReservationStatus(),
-                condition.getIsApproved(),
-                condition.getAssetName(),
-                condition.getAssetType(),
-                condition.getLayerZero());
-
         Page<RawUserReservationResponseDto> rawPage =
                 userReservationsQueryRepository.search(userId, condition, pageable);
 

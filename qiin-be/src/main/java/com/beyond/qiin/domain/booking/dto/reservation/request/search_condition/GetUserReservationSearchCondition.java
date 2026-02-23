@@ -15,11 +15,4 @@ public class GetUserReservationSearchCondition {
 
     private String reservationStatus;
     private String isApproved;
-
-    private String assetName;
-    private String assetType;
-    private Long categoryId;
-    private String assetStatus;
-    private String layerZero;
-    private String layerOne;
 }

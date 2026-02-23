@@ -7,10 +7,6 @@ import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawUserReserv
 import com.beyond.qiin.domain.booking.entity.QReservation;
 import com.beyond.qiin.domain.booking.enums.ReservationStatus;
 import com.beyond.qiin.domain.inventory.entity.QAsset;
-import com.beyond.qiin.domain.inventory.entity.QAssetClosure;
-import com.beyond.qiin.domain.inventory.entity.QCategory;
-import com.beyond.qiin.domain.inventory.enums.AssetStatus;
-import com.beyond.qiin.domain.inventory.enums.AssetType;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -32,8 +28,6 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
 
     private static final QReservation reservation = QReservation.reservation;
     private static final QAsset asset = QAsset.asset;
-    private static final QCategory category = QCategory.category;
-    private static final QAssetClosure closure = QAssetClosure.assetClosure;
 
     @Override
     public Page<RawUserReservationResponseDto> search(
@@ -74,60 +68,6 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
             builder.and(reservation.isApproved.eq(isApproved));
         }
 
-        // 자원명 검색
-        if (condition.getAssetName() != null) {
-            builder.and(asset.name.containsIgnoreCase(condition.getAssetName()));
-        }
-
-        // 자원 유형(int) - 변환된 값 사용
-        if (condition.getAssetType() != null) {
-            String raw = condition.getAssetType().trim();
-
-            try {
-                AssetType statusEnum = AssetType.valueOf(raw.toUpperCase());
-
-                builder.and(asset.type.eq(statusEnum.getCode()));
-
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-
-        // 카테고리 이름 기반 검색 → Category 조인
-        if (condition.getCategoryId() != null) {
-            builder.and(asset.category.id.eq(condition.getCategoryId()));
-        }
-
-        // 자원 상태 (assetStatus) 필터링
-        if (condition.getAssetStatus() != null) {
-            String raw = condition.getAssetStatus().trim();
-
-            try {
-                AssetStatus statusEnum = AssetStatus.valueOf(raw.toUpperCase());
-
-                builder.and(asset.status.eq(statusEnum.getCode()));
-
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-
-        BooleanBuilder closureBuilder = new BooleanBuilder();
-        boolean needsClosureJoin = false;
-
-        // 1depth 우선 적용
-        if (condition.getLayerOne() != null) {
-            needsClosureJoin = true;
-            closureBuilder
-                    .and(closure.assetClosureId.ancestorId.eq(Long.valueOf(condition.getLayerOne())))
-                    .and(closure.depth.gt(0)); // 자기 자신 제외
-        }
-        // root(0depth)
-        else if (condition.getLayerZero() != null) {
-            needsClosureJoin = true;
-            closureBuilder
-                    .and(closure.assetClosureId.ancestorId.eq(Long.valueOf(condition.getLayerZero())))
-                    .and(closure.depth.gt(0)); // 자기 자신 제외
-        }
-
         JPAQuery<RawUserReservationResponseDto> contentQuery = query.select(Projections.constructor(
                         RawUserReservationResponseDto.class,
                         reservation.id,
@@ -137,49 +77,21 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
                         reservation.isApproved,
                         reservation.actualStartAt,
                         reservation.actualEndAt,
-                        reservation.version,
-                        asset.id,
-                        asset.name,
-                        category.name.as("categoryName"),
-                        asset.type,
-                        asset.status))
+                        asset.name))
                 .from(reservation)
                 .join(asset)
                 .on(asset.id.eq(reservation.asset.id))
-                .leftJoin(category)
-                .on(category.id.eq(asset.category.id));
-
-        if (needsClosureJoin) {
-            contentQuery
-                    .leftJoin(closure)
-                    .on(closure.assetClosureId.descendantId.eq(asset.id))
-                    .where(builder.and(closureBuilder));
-        } else {
-            contentQuery.where(builder);
-        }
-
-        List<RawUserReservationResponseDto> content = contentQuery
+                .where(builder)
                 .orderBy(reservation.id.desc())
                 .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
+                .limit(pageable.getPageSize());
 
-        JPAQuery<Long> totalQuery = query.select(reservation.countDistinct())
+        List<RawUserReservationResponseDto> content = contentQuery.fetch();
+
+        Long total = query.select(reservation.count())
                 .from(reservation)
-                .join(asset)
-                .on(asset.id.eq(reservation.asset.id))
-                .leftJoin(category)
-                .on(category.id.eq(asset.category.id));
-
-        if (needsClosureJoin) {
-            totalQuery
-                    .leftJoin(closure)
-                    .on(closure.assetClosureId.descendantId.eq(asset.id))
-                    .where(builder.and(closureBuilder));
-        } else {
-            totalQuery.where(builder);
-        }
-        Long total = totalQuery.fetchOne();
+                .where(builder)
+                .fetchOne();
 
         return new PageImpl<>(content, pageable, total);
     }
