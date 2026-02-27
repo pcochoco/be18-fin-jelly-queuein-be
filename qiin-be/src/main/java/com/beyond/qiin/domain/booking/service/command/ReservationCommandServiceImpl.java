@@ -129,6 +129,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
                 .toList(); // 각 attendantUserId 에 대해 넣지 못하는 문제 userId를 인자로 지정하게 해줘야하나
 
         // reservation slot 생성 - reservation에 startAt, endAt, 있으므로 따로 reservation과의 연관관계 메서드 적용 x
+        // TODO : 예외 처리 추가
         reservationSlotManager.createSlots(reservation, asset);
 
         reservationEventPublisher.publishEventCreated(reservation, attendantUserIds);
