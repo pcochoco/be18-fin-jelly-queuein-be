@@ -18,8 +18,8 @@ public enum ReservationErrorCode implements ErrorCode {
     RESERVATION_TIME_NOT_YET(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_NOT_YET", "자원 예약 시간 이전에 사용 불가합니다."),
     RESERVATION_TIME_OVER(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_OVER", "자원에 대한 예약 시간이 지났습니다."),
     RESERVATION_NOT_APPROVABLE(HttpStatus.BAD_REQUEST, "RESERVATION_NOT_APPROVABLE", "자신의 예약을 승인할 수 없습니다."),
-    RESERVATION_TIME_PASSED(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_PASSED", "예약 시간을 과거로 할 수 없습니다.");
-
+    RESERVATION_TIME_PASSED(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_PASSED", "예약 시간을 과거로 할 수 없습니다."),
+    RESERVATION_TIME_INVALID(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_INVALID", "예약 시작 시간보다 종료 시간이 뒤여야 합니다.");
     private final HttpStatus status;
     private final String error;
     private final String message;

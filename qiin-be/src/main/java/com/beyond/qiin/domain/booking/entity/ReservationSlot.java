@@ -28,12 +28,12 @@ public class ReservationSlot {
     @Column(name = "reservation_slot_id", columnDefinition = "bigint")
     private Long id;
 
-    @Column(name = "start_at", nullable = false, updatable = false, columnDefinition = "DATETIME(6)") // 수정이 아니라 삭제되는 형태
+    @Column(name = "start_at", nullable = false, updatable = false, columnDefinition = "DATETIME(0)") // 수정이 아니라 삭제되는 형태
     private Instant startAt;
 
     @Comment("생성 시각")
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "DATETIME(6)")
     private Instant createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
