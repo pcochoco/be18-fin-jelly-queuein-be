@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ReservationErrorCode implements ErrorCode {
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_NOT_FOUND", "해당 id의 예약 없습니다."),
-    RESERVE_TIME_DUPLICATED(HttpStatus.CONFLICT, "RESERVATION_TIME_CONFLICT", "예약 시간이 다른 예약과 중복됩니다."),
+    RESERVATION_TIME_DUPLICATED(HttpStatus.CONFLICT, "RESERVATION_TIME_CONFLICT", "예약 시간이 다른 예약과 중복됩니다."),
     RESERVATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "RESERVATION_CANCEL_NOT_ALLOWED", "예약 시간 30분 전에만 취소 가능합니다."),
     RESERVATION_STATUS_CHANGE_NOT_ALLOWED(
             HttpStatus.BAD_REQUEST, "RESERVATION_CHANGE_NOT_ALLOWED", "예약 상태에 대한 변경 순서가 잘못되었습니다."),
@@ -18,7 +18,8 @@ public enum ReservationErrorCode implements ErrorCode {
     RESERVATION_TIME_NOT_YET(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_NOT_YET", "자원 예약 시간 이전에 사용 불가합니다."),
     RESERVATION_TIME_OVER(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_OVER", "자원에 대한 예약 시간이 지났습니다."),
     RESERVATION_NOT_APPROVABLE(HttpStatus.BAD_REQUEST, "RESERVATION_NOT_APPROVABLE", "자신의 예약을 승인할 수 없습니다."),
-    RESERVATION_TIME_PASSED(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_PASSED", "예약 시간을 과거로 할 수 없습니다.");
+    RESERVATION_TIME_PASSED(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_PASSED", "예약 시간을 과거로 할 수 없습니다."),
+    RESERVATION_TIME_INVALID(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_INVALID", "예약 시작 시간보다 종료 시간이 뒤여야 합니다.");
 
     private final HttpStatus status;
     private final String error;

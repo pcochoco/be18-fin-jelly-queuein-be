@@ -84,7 +84,7 @@ public class ApproveReservationTest {
 
         ReservationResponseDto response = reservationCommandService.approveReservation(userId, reservationId, dto);
 
-        Mockito.verify(reservation).approve(user, "승인 이유");
+        Mockito.verify(reservation).approve(user, "승인 이유", Instant.now());
         Mockito.verify(reservationWriter).save(reservation);
         Mockito.verify(reservationEventPublisher).publishEventCreated(any(Reservation.class), anyList());
 

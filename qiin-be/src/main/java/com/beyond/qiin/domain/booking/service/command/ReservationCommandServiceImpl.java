@@ -12,15 +12,16 @@ import com.beyond.qiin.domain.booking.event.ReservationEventPublisher;
 import com.beyond.qiin.domain.booking.exception.ReservationErrorCode;
 import com.beyond.qiin.domain.booking.exception.ReservationException;
 import com.beyond.qiin.domain.booking.repository.AttendantJpaRepository;
+import com.beyond.qiin.domain.booking.repository.ReservationSlotJpaRepository;
 import com.beyond.qiin.domain.booking.support.AttendantWriter;
 import com.beyond.qiin.domain.booking.support.ReservationReader;
+import com.beyond.qiin.domain.booking.support.ReservationSlotManager;
 import com.beyond.qiin.domain.booking.support.ReservationWriter;
 import com.beyond.qiin.domain.iam.entity.User;
 import com.beyond.qiin.domain.iam.support.user.UserReader;
 import com.beyond.qiin.domain.inventory.entity.Asset;
 import com.beyond.qiin.domain.inventory.service.command.AssetCommandService;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +44,8 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
     private final ReservationEventPublisher reservationEventPublisher;
     private final AttendantJpaRepository attendantJpaRepository;
     private final UsageHistoryCommandService usageHistoryCommandService;
-
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private final ReservationSlotManager reservationSlotManager;
+    private final ReservationSlotJpaRepository reservationSlotJpaRepository;
 
     // TODO : 선착순, 승인 예약 중복 처리
     // TODO : entity 생성은 entity 안에서
@@ -55,20 +56,26 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
             final Long userId, final Long assetId, final CreateReservationRequestDto createReservationRequestDto) {
 
         Asset asset = assetCommandService.getAssetById(assetId);
-        User applicant = userReader.findById(userId);
-        userReader.validateAllExist(createReservationRequestDto.getAttendantIds());
-        List<User> attendantUsers = userReader.findAllByIds(createReservationRequestDto.getAttendantIds());
+
         assetCommandService.isAvailable(assetId); // 자원 자체가 지금 사용 가능한가에 대한 확인
 
-        Reservation reservation =
-                Reservation.create(createReservationRequestDto, applicant, asset, ReservationStatus.PENDING);
+        User applicant = userReader.findById(userId);
+
+        userReader.validateAllExist(createReservationRequestDto.getAttendantIds());
+
+        List<User> attendantUsers = userReader.findAllByIds(createReservationRequestDto.getAttendantIds());
+
+        Reservation reservation = Reservation.create(
+                createReservationRequestDto, applicant, asset, ReservationStatus.PENDING, Instant.now());
+
+        reservation.setIsApplied(true);
 
         List<Attendant> attendants = attendantUsers.stream()
                 .map(user -> Attendant.create(user, reservation))
                 .collect(Collectors.toList());
 
         reservation.addAttendants(attendants);
-        reservation.setIsApplied(true);
+
         reservationWriter.save(reservation);
 
         attendantWriter.saveAll(attendants);
@@ -84,31 +91,29 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         return ReservationResponseDto.fromEntity(reservation);
     }
 
-    // 선착순 예약 분산락 키 : 자원 id로만 두기 제한적
     @Override
     @Transactional
-    //    @DistributedLock(
-    //            key =
-    //                    "'reservation:' + #assetId + ':' + #createReservationRequestDto.startAt + ':' +
-    // #createReservationRequestDto.endAt")
-
     public ReservationResponseDto instantConfirmReservation(
             final Long userId, final Long assetId, final CreateReservationRequestDto createReservationRequestDto) {
 
-        Asset asset = assetCommandService.findByIdWithLock(assetId); // 자원에 대한 비관적 락 획득
-        User applicant = userReader.findById(userId);
-        userReader.validateAllExist(createReservationRequestDto.getAttendantIds()); // 참여자 목록의 사용자들이 모두 존재하는지에 대한 확인
-        List<User> attendantUsers = userReader.findAllByIds(createReservationRequestDto.getAttendantIds());
-        assetCommandService.isAvailable(assetId);
-        // 해당 시간에 사용 가능한 자원인지 확인
-        validateReservationAvailability(
-                null, asset.getId(), createReservationRequestDto.getStartAt(), createReservationRequestDto.getEndAt());
+        // 자원
+        Asset asset = assetCommandService.getAssetById(assetId);
 
-        // 선착순 자원은 자동 승인
-        Reservation reservation =
-                Reservation.create(createReservationRequestDto, applicant, asset, ReservationStatus.APPROVED);
+        assetCommandService.isAvailable(assetId); // 자원 상태 사용 가능
+
+        // 사용자
+        User applicant = userReader.findById(userId);
+
+        userReader.validateAllExist(createReservationRequestDto.getAttendantIds()); // 참여자 목록의 사용자들이 모두 존재하는지에 대한 확인
+
+        List<User> attendantUsers = userReader.findAllByIds(createReservationRequestDto.getAttendantIds());
+
+        // 예약 생성 - 선착순 자원은 자동 승인 (미래 시간인지 확인)
+        Reservation reservation = Reservation.create(
+                createReservationRequestDto, applicant, asset, ReservationStatus.APPROVED, Instant.now());
         reservation.setIsApproved(true); // 승인됨
 
+        // 참여자 추가
         List<Attendant> attendants = attendantUsers.stream()
                 .map(user -> Attendant.create(user, reservation))
                 .collect(Collectors.toList());
@@ -122,6 +127,9 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         List<Long> attendantUserIds = attendants.stream()
                 .map(a -> a.getUser().getId())
                 .toList(); // 각 attendantUserId 에 대해 넣지 못하는 문제 userId를 인자로 지정하게 해줘야하나
+
+        // reservation slot 생성 - reservation에 startAt, endAt, 있으므로 따로 reservation과의 연관관계 메서드 적용 x
+        reservationSlotManager.createSlots(reservation, asset);
 
         reservationEventPublisher.publishEventCreated(reservation, attendantUserIds);
 
@@ -139,23 +147,26 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
 
         Reservation reservation = reservationReader.getReservationById(reservationId);
 
+        Asset asset = assetCommandService.getAssetById(reservation.getAsset().getId());
+
         // 신청자는 자신의 예약을 승인할 수 없음
         if (reservation.getApplicant().getId().equals(userId)) {
             throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_APPROVABLE);
         }
 
-        Asset asset = reservation.getAsset();
-        validateReservationAvailability(
-                reservation.getId(), asset.getId(), reservation.getStartAt(), reservation.getEndAt());
+        // reservation slot 생성 - reservation에 startAt, endAt, 있으므로 따로 reservation과의 연관관계 메서드 적용 x
+        reservationSlotManager.createSlots(reservation, asset);
 
-        reservation.approve(respondent, confirmReservationRequestDto.getReason()); // status approved
+        reservation.approve(respondent, confirmReservationRequestDto.getReason(), Instant.now()); // status approved
+
         reservationWriter.save(reservation);
 
         List<Long> attendantUserIds = reservation.getAttendants().stream()
                 .map(a -> a.getUser().getId())
-                .toList(); // 각 attendantUserId 에 대해 넣지 못하는 문제 userId를 인자로 지정하게 해줘야하나
+                .toList(); // TODO : 각 attendantUserId 에 대해 넣지 못하는 문제 userId를 인자로 지정하게 해줘야하나
 
         reservationEventPublisher.publishEventCreated(reservation, attendantUserIds);
+
         return ReservationResponseDto.fromEntity(reservation);
     }
 
@@ -167,17 +178,20 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
             final ConfirmReservationRequestDto confirmReservationRequestDto) {
 
         User respondent = userReader.findById(userId);
+
         Reservation reservation = reservationReader.getReservationById(reservationId);
 
-        // 승인자 != 신청자
+        // 승인자는 자신의 예약 승인 불가
         if (reservation.getApplicant().getId().equals(userId)) {
             throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_APPROVABLE);
         }
 
-        reservation.reject(respondent, confirmReservationRequestDto.getReason()); // status rejected
+        reservation.reject(respondent, confirmReservationRequestDto.getReason()); // status rejected, reason 추가
+
         reservationWriter.save(reservation);
 
         reservationEventPublisher.publishEventCreated(reservation, null);
+
         return ReservationResponseDto.fromEntity(reservation);
     }
 
@@ -189,22 +203,16 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         userReader.findById(userId);
 
         Reservation reservation = reservationReader.getReservationById(reservationId);
+
         // 지금 사용 불가한 자원이면 제외
         assetCommandService.isAvailable(reservation.getAsset().getId());
 
-        // 시작 시간부터 사용 가능
-        Instant now = Instant.now();
-        if (now.isBefore(reservation.getStartAt())) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_NOT_YET);
-        }
-
-        // 끝나는 시간 이후면 사용 불가
-        if (now.isAfter(reservation.getEndAt())) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_OVER);
-        }
+        validateReservationStart(reservation.getStartAt(), reservation.getEndAt());
 
         reservation.start(); // status using, 실제 시작 시간 추가
+
         reservationWriter.save(reservation);
+
         return ReservationResponseDto.fromEntity(reservation);
     }
 
@@ -295,6 +303,10 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
             throw new ReservationException(ReservationErrorCode.USING_RESERVATION_NOT_DELETED);
         }
         reservation.softDeleteAll(userId); // 예약, 참여자 둘다 soft delete 처리
+
+        // reservation slot 삭제
+        reservationSlotJpaRepository.deleteByReservationId(reservationId);
+
         reservationWriter.save(reservation);
     }
 
@@ -303,58 +315,10 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         reservationWriter.hardDelete(reservationId);
     }
 
-    // api x 비즈니스 메서드
-    private void validateReservationAvailability(
-            final Long reservationId, final Long assetId, final Instant startAt, final Instant endAt) {
-
-        // 예약 시간이 현재보다 과거인 경우
-        Instant now = Instant.now();
-
-        if (!endAt.isAfter(now)) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_PASSED);
-        }
-
-        // 예약 시간이 다른 예약과 중복되는 경우
-        if (!isReservationTimeAvailable(reservationId, assetId, startAt, endAt))
-            throw new ReservationException(ReservationErrorCode.RESERVE_TIME_DUPLICATED);
-    }
-
     private void validateReservationCanceling(final Reservation reservation) {
         if (!isReservationCancelAvailable(reservation))
             // ddd -> 검증 / service 의 행동 결정(메시지 던짐)
             throw new ReservationException(ReservationErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
-    }
-
-    // test 가능하도록 package private 허용
-    // 자원에 대한 예약 가능의 유무 -  비즈니스 책임이므로 command service로
-    boolean isReservationTimeAvailable(
-            final Long reservationId, final Long assetId, final Instant startAt, final Instant endAt) {
-
-        List<Reservation> reservations = reservationReader.getActiveReservationsByAssetId(assetId);
-
-        for (Reservation reservation : reservations) {
-
-            if (reservationId != null) { // 생성시는 null
-                if (reservation.getId().equals(reservationId)) {
-                    continue;
-                }
-            }
-
-            Instant existingStart = reservation.getStartAt();
-            Instant existingEnd = reservation.getEndAt();
-
-            // 딱 맞닿는 경우는 허용
-            if (startAt.equals(existingEnd) || endAt.equals(existingStart)) {
-                continue;
-            }
-
-            // 겹침 체크
-            boolean overlaps = startAt.isBefore(existingEnd) && endAt.isAfter(existingStart);
-
-            if (overlaps) return false;
-        }
-
-        return true;
     }
 
     private boolean isReservationCancelAvailable(final Reservation reservation) {
@@ -365,5 +329,19 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
             return true; // 취소 가능
         }
         return false;
+    }
+
+    private void validateReservationStart(final Instant startAt, final Instant endAt) {
+        // 시작 시간부터 사용 가능
+        Instant now = Instant.now();
+
+        if (now.isBefore(startAt)) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_NOT_YET);
+        }
+
+        // 끝나는 시간 이후면 사용 불가
+        if (now.isAfter(endAt)) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_OVER);
+        }
     }
 }

@@ -401,7 +401,7 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
     private void validateReservationAvailability(
             final Long reservationId, final Long assetId, final Instant startAt, final Instant endAt) {
         if (!isReservationTimeAvailable(reservationId, assetId, startAt, endAt))
-            throw new ReservationException(ReservationErrorCode.RESERVE_TIME_DUPLICATED);
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_DUPLICATED);
     }
 
     // test 가능하도록 package private 허용

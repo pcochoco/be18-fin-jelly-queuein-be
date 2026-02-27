@@ -1,7 +1,5 @@
 package com.beyond.qiin.domain.booking.repository.querydsl;
 
-import static com.beyond.qiin.domain.inventory.entity.QAsset.asset;
-
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetUserReservationSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawUserReservationResponseDto;
 import com.beyond.qiin.domain.booking.entity.QReservation;

@@ -9,6 +9,7 @@ import com.beyond.qiin.domain.iam.entity.User;
 import com.beyond.qiin.domain.inventory.entity.Asset;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -30,11 +31,6 @@ import org.hibernate.annotations.SQLRestriction;
             @Index(name = "idx_reservation_applicant_id", columnList = "applicant_id"),
             @Index(name = "idx_reservation_respondent_id", columnList = "respondent_id"),
             @Index(name = "idx_reservation_asset_id", columnList = "asset_id")
-        },
-        uniqueConstraints = {
-            @UniqueConstraint(
-                    name = "uk_asset_time",
-                    columnNames = {"asset_id", "start_at", "end_at"})
         })
 @AttributeOverride(name = "id", column = @Column(name = "reservation_id"))
 @SQLRestriction("deleted_at is null")
@@ -60,16 +56,18 @@ public class Reservation extends BaseEntity {
     @OneToMany(mappedBy = "reservation")
     private List<Attendant> attendants = new ArrayList<>();
 
-    @Column(name = "start_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
+    // 실제 예약 시간
+    @Column(name = "start_at", nullable = false, columnDefinition = "DATETIME(0)")
     private Instant startAt;
 
-    @Column(name = "end_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
+    @Column(name = "end_at", nullable = false, columnDefinition = "DATETIME(0)")
     private Instant endAt;
 
-    @Column(name = "actual_start_at", nullable = true, columnDefinition = "TIMESTAMP(6)")
+    // 실제 사용 시간
+    @Column(name = "actual_start_at", nullable = true, columnDefinition = "DATETIME(6)")
     private Instant actualStartAt;
 
-    @Column(name = "actual_end_at", nullable = true, columnDefinition = "TIMESTAMP(6)")
+    @Column(name = "actual_end_at", nullable = true, columnDefinition = "DATETIME(6)")
     private Instant actualEndAt;
 
     @Column(name = "status", nullable = false)
@@ -108,13 +106,27 @@ public class Reservation extends BaseEntity {
             final CreateReservationRequestDto createReservationRequestDto,
             final User applicant,
             final Asset asset,
-            final ReservationStatus reservationStatus) {
+            final ReservationStatus reservationStatus,
+            final Instant now) {
+
+        Instant normalizedStart = createReservationRequestDto.getStartAt().truncatedTo(ChronoUnit.HOURS);
+
+        Instant normalizedEnd = createReservationRequestDto.getEndAt().truncatedTo(ChronoUnit.HOURS);
+
+        if (!normalizedEnd.isAfter(normalizedStart)) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_INVALID);
+        }
+
+        if (!normalizedStart.isAfter(now) || !normalizedEnd.isAfter(now)) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_PASSED);
+        }
+
         return Reservation.builder()
                 .applicant(applicant)
                 .respondent(null)
                 .asset(asset)
-                .startAt(createReservationRequestDto.getStartAt())
-                .endAt(createReservationRequestDto.getEndAt())
+                .startAt(normalizedStart)
+                .endAt(normalizedEnd)
                 .description(createReservationRequestDto.getDescription())
                 .status(reservationStatus.getCode())
                 .build();
@@ -195,6 +207,7 @@ public class Reservation extends BaseEntity {
         // pending일때 시간 변경 가능(승인전)
         if (this.status != ReservationStatus.PENDING.getCode())
             throw new ReservationException(ReservationErrorCode.RESERVATION_STATUS_CHANGE_NOT_ALLOWED);
+        // TODO : time slot 제거, 변경 시각으로 다시 넣는 것을 시도
         this.startAt = startAt;
         this.endAt = endAt;
     }
@@ -243,10 +256,15 @@ public class Reservation extends BaseEntity {
     //    }
 
     // 예약 승인
-    public void approve(final User respondent, final String reason) {
+    public void approve(final User respondent, final String reason, final Instant now) {
         if (this.getStatus() != ReservationStatus.PENDING
                 && this.getStatus() != ReservationStatus.REJECTED) // (this.status != 0)
         throw new ReservationException(ReservationErrorCode.RESERVATION_STATUS_CHANGE_NOT_ALLOWED);
+
+        if (!this.startAt.isAfter(now)) { // 예약 생성 시 종료가 시작 뒤임을 확인했기 때문에 시작 시간이 미래이면 됨
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_PASSED);
+        }
+
         this.setStatus(ReservationStatus.APPROVED); // this.status = 1;
         this.reason = reason; // 사용자 입력이므로 null 받으면 null임(빈칸은 프론트에서 ""으로 옴)
         this.respondent = respondent;
