@@ -30,7 +30,7 @@ public class ReservationSlotManager {
             cursor = cursor.plus(1, ChronoUnit.HOURS); // 시작 시간으로부터 1시간씩 증가
         }
 
-        //slot을 정렬 후 순서대로 insert 
+        // slot을 정렬 후 순서대로 insert
         slots.sort(Comparator.comparing(ReservationSlot::getStartAt));
 
         try {
