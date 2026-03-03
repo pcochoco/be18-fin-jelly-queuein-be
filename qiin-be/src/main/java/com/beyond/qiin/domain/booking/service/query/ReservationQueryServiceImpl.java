@@ -443,12 +443,12 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
 
         // 2. 순서 검증
         if (start != null && end != null && start.isAfter(end)) {
-            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_INVALID);
         }
 
         // 3. 최대 조회 기간 제한 (90일)
         if (start != null && end != null && ChronoUnit.DAYS.between(start, end) > 90) {
-            throw new IllegalArgumentException("조회 기간은 최대 90일까지 가능합니다.");
+            throw new ReservationException(ReservationErrorCode.RESERVATION_SEARCH_PERIOD_EXCEEDED);
         }
 
         // 4. Instant 변환
