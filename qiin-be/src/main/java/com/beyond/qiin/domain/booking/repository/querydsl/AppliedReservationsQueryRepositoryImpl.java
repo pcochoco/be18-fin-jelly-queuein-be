@@ -1,19 +1,21 @@
 package com.beyond.qiin.domain.booking.repository.querydsl;
 
-import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetAppliedReservationSearchCondition;
+import com.beyond.qiin.domain.booking.dto.reservation.request.criteria.AppliedReservationSearchCriteria;
 import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawAppliedReservationResponseDto;
 import com.beyond.qiin.domain.booking.entity.QReservation;
-import com.beyond.qiin.domain.booking.enums.ReservationStatus;
-import com.beyond.qiin.domain.booking.vo.DateRange;
 import com.beyond.qiin.domain.iam.entity.QUser;
 import com.beyond.qiin.domain.inventory.entity.QAsset;
 import com.beyond.qiin.domain.inventory.entity.QAssetClosure;
 import com.beyond.qiin.domain.inventory.entity.QCategory;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -29,45 +31,60 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
     private static final QUser applicant = new QUser("applicant");
     private static final QUser respondent = new QUser("respondent");
 
+    // TODO : 매개인자 정리
+
     @Override
-    public List<RawAppliedReservationResponseDto> search(
-            GetAppliedReservationSearchCondition condition, DateRange range, ReservationStatus reservationStatus) {
+    public Page<RawAppliedReservationResponseDto> search(
+            AppliedReservationSearchCriteria appliedReservationSearchCriteria, Pageable pageable) {
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(reservation.isApplied.eq(true)); // 신청된 경우
 
         // 날짜(Instant)
-        if (range.getStartDay() != null) {
-            builder.and(reservation.startAt.goe(range.getStartDay()));
+        if (appliedReservationSearchCriteria.getDateRange().getStartDay() != null) {
+            builder.and(reservation.startAt.goe(
+                    appliedReservationSearchCriteria.getDateRange().getStartDay()));
         }
 
-        if (range.getEndDay() != null) {
-            builder.and(reservation.startAt.lt(range.getEndDay()));
+        if (appliedReservationSearchCriteria.getDateRange() != null) {
+            builder.and(reservation.startAt.lt(
+                    appliedReservationSearchCriteria.getDateRange().getEndDay()));
         }
 
         // reservation status
-        if (reservationStatus != null) {
+        if (appliedReservationSearchCriteria.getReservationStatus() != null) {
 
-            builder.and(reservation.status.eq(reservationStatus.getCode()));
+            builder.and(reservation.status.eq(
+                    appliedReservationSearchCriteria.getReservationStatus().getCode()));
         }
 
         // 신청자 이름 검색
-        if (condition.getApplicantName() != null) {
-            builder.and(applicant.userName.containsIgnoreCase(condition.getApplicantName()));
+        if (appliedReservationSearchCriteria.getApplicantName() != null) {
+            builder.and(applicant.userName.containsIgnoreCase(appliedReservationSearchCriteria.getApplicantName()));
         }
 
         // 자원명
-        if (condition.getAssetName() != null) {
-            builder.and(asset.name.containsIgnoreCase(condition.getAssetName()));
+        if (appliedReservationSearchCriteria.getAssetName() != null) {
+            builder.and(asset.name.containsIgnoreCase(appliedReservationSearchCriteria.getAssetName()));
         }
 
         // category id
-        if (condition.getCategoryId() != null) {
-            builder.and(asset.category.id.eq(condition.getCategoryId()));
+        if (appliedReservationSearchCriteria.getCategoryId() != null) {
+            builder.and(asset.category.id.eq(appliedReservationSearchCriteria.getCategoryId()));
         }
 
         // 조회
-        var queryBuilder = query.select(Projections.constructor(
+        // query 정의
+        JPAQuery<?> baseQuery = query.from(reservation)
+                .join(reservation.asset, asset)
+                .leftJoin(asset.category, category)
+                .leftJoin(reservation.applicant, applicant)
+                .leftJoin(reservation.respondent, respondent)
+                .where(builder);
+
+        List<RawAppliedReservationResponseDto> content = baseQuery
+                .clone()
+                .select(Projections.constructor(
                         RawAppliedReservationResponseDto.class,
                         asset.id,
                         asset.name,
@@ -80,12 +97,13 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
                         reservation.version,
                         reservation.startAt,
                         reservation.endAt))
-                .from(reservation)
-                .join(reservation.asset, asset)
-                .leftJoin(asset.category, category)
-                .leftJoin(reservation.applicant, applicant)
-                .leftJoin(reservation.respondent, respondent);
+                .orderBy(reservation.id.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch(); // 실행
 
-        return queryBuilder.where(builder).orderBy(reservation.id.desc()).fetch();
+        Long total = baseQuery.clone().select(reservation.count()).fetchOne();
+
+        return new PageImpl<>(content, pageable, total == null ? 0 : total);
     }
 }
