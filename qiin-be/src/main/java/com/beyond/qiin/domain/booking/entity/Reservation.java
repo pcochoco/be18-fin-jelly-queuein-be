@@ -78,13 +78,6 @@ public class Reservation extends BaseEntity {
     @Builder.Default
     private boolean isApplied = false;
 
-    @Transient
-    private ReservationStatus reservationStatus;
-
-    //    @Column(name = "status", nullable = false, columnDefinition = "int")
-    //    @Convert(converter = ReservationStatusConverter.class)
-    //    private ReservationStatus status;
-
     @Column(name = "description", length = 500, nullable = true)
     private String description;
 
@@ -155,9 +148,8 @@ public class Reservation extends BaseEntity {
         return ReservationStatus.from(this.status);
     }
 
-    public void setStatus(final ReservationStatus reservationStatus) {
-        this.reservationStatus = reservationStatus;
-        this.status = reservationStatus.getCode();
+    public void setStatus(final ReservationStatus status) {
+        this.status = status.getCode();
     }
 
     public void setIsApplied(final boolean isApplied) {
