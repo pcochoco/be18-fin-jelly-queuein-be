@@ -19,6 +19,7 @@ import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.
 import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.WeekReservationListResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.WeekReservationResponseDto;
 import com.beyond.qiin.domain.booking.entity.Reservation;
+import com.beyond.qiin.domain.booking.enums.ReservationStatus;
 import com.beyond.qiin.domain.booking.exception.ReservationErrorCode;
 import com.beyond.qiin.domain.booking.exception.ReservationException;
 import com.beyond.qiin.domain.booking.repository.querydsl.AppliedReservationsQueryRepository;
@@ -39,6 +40,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -103,7 +105,21 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
 
         userReader.findById(userId);
 
-        List<RawAppliedReservationResponseDto> rawList = appliedReservationsQueryRepository.search(condition);
+        // string -> enum
+        ReservationStatus status = null;
+
+        if (condition.getReservationStatus() != null) {
+            try {
+                status = ReservationStatus.valueOf(condition.getReservationStatus());
+            } catch (IllegalArgumentException e) {
+                throw new ReservationException(ReservationErrorCode.RESERVATION_STATUS_INVALID);
+            }
+        }
+
+        DateRange range = resolveSearchDateRange(condition);
+
+        List<RawAppliedReservationResponseDto> rawList =
+                appliedReservationsQueryRepository.search(condition, range, status);
 
         List<GetAppliedReservationResponseDto> appliedReservations = new ArrayList<>();
 
@@ -434,5 +450,36 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
         }
 
         return true;
+    }
+
+    private DateRange resolveSearchDateRange(GetAppliedReservationSearchCondition condition) {
+
+        ZoneId zone = ZoneId.of("Asia/Seoul");
+
+        LocalDate start = condition.getStartDate();
+        LocalDate end = condition.getEndDate();
+
+        // 1. 기본값 (둘 다 null이면 최근 30일)
+        if (start == null && end == null) {
+            start = LocalDate.now(zone).minusDays(30);
+            end = LocalDate.now(zone);
+        }
+
+        // 2. 순서 검증
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
+        }
+
+        // 3. 최대 조회 기간 제한 (90일)
+        if (start != null && end != null && ChronoUnit.DAYS.between(start, end) > 90) {
+            throw new IllegalArgumentException("조회 기간은 최대 90일까지 가능합니다.");
+        }
+
+        // 4. Instant 변환
+        Instant startInstant = start != null ? start.atStartOfDay(zone).toInstant() : null;
+
+        Instant endInstant = end != null ? end.plusDays(1).atStartOfDay(zone).toInstant() : null;
+
+        return DateRange.create(startInstant, endInstant);
     }
 }
