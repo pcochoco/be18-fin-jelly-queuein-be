@@ -82,6 +82,7 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
                         reservation.isApproved,
                         reservation.actualStartAt,
                         reservation.actualEndAt,
+                        reservation.version,
                         asset.name))
                 .orderBy(reservation.id.desc())
                 .offset(pageable.getOffset())

@@ -5,7 +5,6 @@ import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawAppliedRes
 import com.beyond.qiin.domain.booking.entity.QReservation;
 import com.beyond.qiin.domain.iam.entity.QUser;
 import com.beyond.qiin.domain.inventory.entity.QAsset;
-import com.beyond.qiin.domain.inventory.entity.QAssetClosure;
 import com.beyond.qiin.domain.inventory.entity.QCategory;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
@@ -27,11 +26,8 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
     private static final QReservation reservation = QReservation.reservation;
     private static final QAsset asset = QAsset.asset;
     private static final QCategory category = QCategory.category;
-    private static final QAssetClosure closure = QAssetClosure.assetClosure;
     private static final QUser applicant = new QUser("applicant");
     private static final QUser respondent = new QUser("respondent");
-
-    // TODO : 매개인자 정리
 
     @Override
     public Page<RawAppliedReservationResponseDto> search(
