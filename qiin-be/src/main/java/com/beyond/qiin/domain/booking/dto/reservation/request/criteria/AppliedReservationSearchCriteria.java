@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AppliedReservationSearchCriteria {
-    private final DateRange range;
+    private final DateRange dateRange;
     private final ReservationStatus reservationStatus;
     private final String applicantName;
     private final String assetName;
@@ -20,7 +20,7 @@ public class AppliedReservationSearchCriteria {
             final ReservationStatus reservationStatus,
             final GetAppliedReservationSearchCondition condition) {
         return AppliedReservationSearchCriteria.builder()
-                .range(dateRange)
+                .dateRange(dateRange)
                 .reservationStatus(reservationStatus)
                 .applicantName(condition.getApplicantName())
                 .assetName(condition.getAssetName())
