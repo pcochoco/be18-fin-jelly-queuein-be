@@ -22,7 +22,8 @@ public enum ReservationErrorCode implements ErrorCode {
     RESERVATION_TIME_INVALID(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_INVALID", "예약 시작 시간보다 종료 시간이 뒤여야 합니다."),
     RESERVATION_STATUS_INVALID(HttpStatus.BAD_REQUEST, "RESERVATION_STATUS_INVALID", "유효하지 않은 예약 상태입니다."),
     RESERVATION_TIME_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RESERVATION_TIME_NOT_AVAILABLE", "유효하지 않은 예약 상태입니다."),
-    RESERVATION_SEARCH_PERIOD_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_SEARCH_PERIOD_EXCEEDED", "예약 조회는 90일까지 가능합니다.");
+    RESERVATION_SEARCH_PERIOD_EXCEEDED(
+            HttpStatus.BAD_REQUEST, "RESERVATION_SEARCH_PERIOD_EXCEEDED", "예약 조회는 90일까지 가능합니다.");
 
     private final HttpStatus status;
     private final String error;

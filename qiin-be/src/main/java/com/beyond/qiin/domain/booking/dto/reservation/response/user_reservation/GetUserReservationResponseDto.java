@@ -31,6 +31,8 @@ public class GetUserReservationResponseDto {
 
     private final Instant actualEndAt;
 
+    private final Long version;
+
     public static GetUserReservationResponseDto fromRaw(final RawUserReservationResponseDto raw) {
         return GetUserReservationResponseDto.builder()
                 .reservationId(raw.getReservationId())
@@ -42,27 +44,7 @@ public class GetUserReservationResponseDto {
                         ReservationStatus.from(raw.getReservationStatus()).name())
                 .actualStartAt(raw.getActualStartAt())
                 .actualEndAt(raw.getActualEndAt())
+                .version(raw.getVersion())
                 .build();
     }
-
-    //    public static GetUserReservationResponseDto fromEntity(
-    //            final Reservation reservation,
-    //            final String reservationStatus,
-    //            final String assetType,
-    //            final String assetStatus) {
-    //
-    //        return GetUserReservationResponseDto.builder()
-    //                .reservationId(reservation.getId().toString())
-    //                .assetType(assetType)
-    //                .assetName(reservation.getAsset().getName())
-    //                .categoryName(reservation.getAsset().getCategory().getName())
-    //                .assetStatus(assetStatus)
-    //                .isApproved(reservation.isApproved()) // Boolean (null 가능)
-    //                .startAt(reservation.getStartAt())
-    //                .endAt(reservation.getEndAt())
-    //                .reservationStatus(reservation.getStatus().name())
-    //                .actualStartAt(reservation.getActualStartAt())
-    //                .actualEndAt(reservation.getActualEndAt())
-    //                .build();
-    //    }
 }
