@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties
 @ConfigurationPropertiesScan
 @EnableScheduling
-@EnableRetry
 public class QiinApplication {
 
     public static void main(String[] args) {

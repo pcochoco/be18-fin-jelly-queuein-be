@@ -97,11 +97,6 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
 
     @Override
     @Transactional
-    @Retryable( // 데드락으로 인해 예약 실패시 해당 트랜잭션 롤백된 이후 재시도
-            value = {DeadlockLoserDataAccessException.class, CannotAcquireLockException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 50) // 타 트랜잭션 커밋 중인 경우 대기하는 용도
-            )
     public ReservationResponseDto instantConfirmReservation(
             final Long userId, final Long assetId, final CreateReservationRequestDto createReservationRequestDto) {
 
