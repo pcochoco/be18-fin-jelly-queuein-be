@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -45,6 +47,9 @@ public class ReservationSlotManager {
 
             // 다른 무결성 예외는 그대로 던짐
             throw e;
+        } catch (DeadlockLoserDataAccessException | CannotAcquireLockException e) {
+
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_DUPLICATED);
         }
     }
 }
