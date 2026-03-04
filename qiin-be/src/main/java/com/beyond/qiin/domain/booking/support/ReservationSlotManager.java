@@ -9,9 +9,12 @@ import com.beyond.qiin.domain.inventory.entity.Asset;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,9 +32,12 @@ public class ReservationSlotManager {
             cursor = cursor.plus(1, ChronoUnit.HOURS); // 시작 시간으로부터 1시간씩 증가
         }
 
+        // slot을 정렬 후 순서대로 insert
+        slots.sort(Comparator.comparing(ReservationSlot::getStartAt));
+
         try {
             reservationSlotJpaRepository.saveAll(slots);
-            reservationSlotJpaRepository.flush(); // 여기서 UNIQUE 충돌 발생
+            reservationSlotJpaRepository.flush(); // 실제 db 반영에 따른 unique 충돌 가능 - 예외 처리
         } catch (DataIntegrityViolationException e) {
 
             // uk_asset_slot (asset_id, start_at) 충돌인 경우만 변환
@@ -41,6 +47,9 @@ public class ReservationSlotManager {
 
             // 다른 무결성 예외는 그대로 던짐
             throw e;
+        } catch (DeadlockLoserDataAccessException | CannotAcquireLockException e) {
+
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_DUPLICATED);
         }
     }
 }
