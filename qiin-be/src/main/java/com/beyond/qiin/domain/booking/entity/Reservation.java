@@ -36,18 +36,18 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLRestriction("deleted_at is null")
 public class Reservation extends BaseEntity {
 
-    // 신청자 - user 쪽에서 조회할 일 없으므로 reservation 쪽에서 매핑
-    @OneToOne(fetch = FetchType.LAZY)
+    // 신청자 - user 쪽에서 조회할 일 없으므로 reservation 쪽에서 매핑, 1 사용자 여러 예약 가능
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "applicant_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private User applicant;
 
-    // 승인자
-    @OneToOne(fetch = FetchType.LAZY)
+    // 승인자 - 1 승인자 여러 예약 승인 가능
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "respondent_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private User respondent;
 
-    // 자원
-    @OneToOne(fetch = FetchType.LAZY)
+    // 자원 - 1 자원 여러 예약 가능
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asset_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Asset asset;
 

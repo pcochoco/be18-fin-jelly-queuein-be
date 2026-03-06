@@ -6,14 +6,11 @@ import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @NoArgsConstructor
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class CreateReservationRequestDto {
 
@@ -36,25 +33,4 @@ public class CreateReservationRequestDto {
     @NotNull
     @Builder.Default
     private List<Long> attendantIds = new ArrayList<>();
-
-    //    public Reservation toEntity(
-    //            final Asset asset,
-    //            final User applicant,
-    //            // final List<Attendant> attendants,
-    //            final ReservationStatus reservationStatus) {
-    //
-    //        Reservation reservation = Reservation.builder()
-    //                .asset(asset)
-    //                .applicant(applicant)
-    //                .startAt(startAt)
-    //                .endAt(endAt)
-    //                .description(description)
-    //                .status(reservationStatus.getCode())
-    //                .reservationStatus(reservationStatus)
-    //                .build();
-    //
-    //        // reservation.addAttendants(attendants);
-    //
-    //        return reservation;
-    //    }
 }

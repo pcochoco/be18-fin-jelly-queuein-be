@@ -7,7 +7,7 @@ import lombok.*;
 
 @Getter
 @Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class AppliedReservationSearchCriteria {
     private final DateRange dateRange;
     private final ReservationStatus reservationStatus;
