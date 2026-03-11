@@ -477,10 +477,7 @@ public class ReservationControllerTest {
         // 응답 DTO 1건
         GetUserReservationResponseDto dto = GetUserReservationResponseDto.builder()
                 .reservationId(10L)
-                .assetType("MEETING_ROOM")
                 .assetName("회의실 A")
-                .categoryName("회의실")
-                .assetStatus("AVAILABLE")
                 .isApproved(true)
                 .startAt(Instant.parse("2025-12-12T10:00:00Z"))
                 .endAt(Instant.parse("2025-12-12T11:00:00Z"))

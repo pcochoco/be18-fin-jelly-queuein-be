@@ -18,16 +18,20 @@ public enum ReservationStatus implements EnumCode {
     COMPLETED(5),
     UNAVAILABLE(6); // 자원 사용 불가 시
 
-    private final int code;
+    private final int code; // getCode : enum -> int
 
     private static final Map<Integer, ReservationStatus> CODE_MAP =
             Arrays.stream(values()).collect(Collectors.toMap(ReservationStatus::getCode, s -> s));
 
-    public static ReservationStatus from(int code) {
+    public static ReservationStatus from(int code) { // int -> enum
         ReservationStatus status = CODE_MAP.get(code);
         if (status == null) {
             throw new IllegalArgumentException("Invalid ReservationStatus code: " + code);
         }
         return status;
+    }
+
+    public static ReservationStatus fromName(String name) {
+        return ReservationStatus.valueOf(name);
     }
 }

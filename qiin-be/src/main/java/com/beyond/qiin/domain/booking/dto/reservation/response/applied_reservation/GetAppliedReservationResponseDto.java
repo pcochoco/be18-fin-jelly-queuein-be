@@ -54,21 +54,4 @@ public class GetAppliedReservationResponseDto {
                 .reason(raw.getReason())
                 .build();
     }
-
-    //    public static GetAppliedReservationResponseDto fromEntity(final Reservation reservation, boolean isReservable)
-    // {
-    //
-    //        return GetAppliedReservationResponseDto.builder()
-    //                .assetName(reservation.getAsset().getName())
-    //                .reservationId(reservation.getId())
-    //                .applicantName(reservation.getApplicant().getUserName())
-    //                .isReservable(isReservable)
-    //                .respondentName(
-    //                        reservation.getRespondent() != null
-    //                                ? reservation.getRespondent().getUserName()
-    //                                : null)
-    //                .isApproved(reservation.isApproved())
-    //                .reason(reservation.getReason())
-    //                .build();
-    //    }
 }

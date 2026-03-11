@@ -66,7 +66,14 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
             builder.and(reservation.isApproved.eq(isApproved));
         }
 
-        JPAQuery<RawUserReservationResponseDto> contentQuery = query.select(Projections.constructor(
+        JPAQuery<?> baseQuery = query.from(reservation)
+                .join(asset)
+                .on(asset.id.eq(reservation.asset.id))
+                .where(builder);
+
+        List<RawUserReservationResponseDto> content = baseQuery
+                .clone()
+                .select(Projections.constructor(
                         RawUserReservationResponseDto.class,
                         reservation.id,
                         reservation.startAt,
@@ -75,22 +82,18 @@ public class UserReservationsQueryRepositoryImpl implements UserReservationsQuer
                         reservation.isApproved,
                         reservation.actualStartAt,
                         reservation.actualEndAt,
+                        reservation.version,
                         asset.name))
-                .from(reservation)
-                .join(asset)
-                .on(asset.id.eq(reservation.asset.id))
-                .where(builder)
                 .orderBy(reservation.id.desc())
                 .offset(pageable.getOffset())
-                .limit(pageable.getPageSize());
-
-        List<RawUserReservationResponseDto> content = contentQuery.fetch();
+                .limit(pageable.getPageSize())
+                .fetch();
 
         Long total = query.select(reservation.count())
                 .from(reservation)
                 .where(builder)
                 .fetchOne();
 
-        return new PageImpl<>(content, pageable, total);
+        return new PageImpl<>(content, pageable, total == null ? 0 : total);
     }
 }

@@ -1,6 +1,7 @@
 package com.beyond.qiin.domain.booking.service.query;
 
 import com.beyond.qiin.common.dto.PageResponseDto;
+import com.beyond.qiin.domain.booking.dto.reservation.request.criteria.AppliedReservationSearchCriteria;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetAppliedReservationSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetUserReservationSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.ReservableAssetSearchCondition;
@@ -19,6 +20,7 @@ import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.
 import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.WeekReservationListResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.WeekReservationResponseDto;
 import com.beyond.qiin.domain.booking.entity.Reservation;
+import com.beyond.qiin.domain.booking.enums.ReservationStatus;
 import com.beyond.qiin.domain.booking.exception.ReservationErrorCode;
 import com.beyond.qiin.domain.booking.exception.ReservationException;
 import com.beyond.qiin.domain.booking.repository.querydsl.AppliedReservationsQueryRepository;
@@ -34,13 +36,9 @@ import com.beyond.qiin.domain.inventory.dto.asset.response.raw.RawDescendantAsse
 import com.beyond.qiin.domain.inventory.enums.AssetType;
 import com.beyond.qiin.domain.inventory.repository.querydsl.AssetQueryRepository;
 import com.beyond.qiin.domain.inventory.service.query.AssetQueryService;
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.ZoneId;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -99,37 +97,31 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
     @Override
     @Transactional(readOnly = true)
     public PageResponseDto<GetAppliedReservationResponseDto> getReservationApplies(
-            final Long userId, final GetAppliedReservationSearchCondition condition, Pageable pageable) {
+            final Long userId, final GetAppliedReservationSearchCondition condition, final Pageable pageable) {
 
         userReader.findById(userId);
 
-        List<RawAppliedReservationResponseDto> rawList = appliedReservationsQueryRepository.search(condition);
+        // string -> enum
+        ReservationStatus status = parseStatus(condition.getReservationStatus());
 
-        List<GetAppliedReservationResponseDto> appliedReservations = new ArrayList<>();
+        DateRange range = resolveSearchDateRange(condition);
 
-        for (RawAppliedReservationResponseDto raw : rawList) {
+        AppliedReservationSearchCriteria appliedReservationSearchCriteria =
+                AppliedReservationSearchCriteria.from(range, status, condition);
 
+        Page<RawAppliedReservationResponseDto> rawPage =
+                appliedReservationsQueryRepository.search(appliedReservationSearchCriteria, pageable);
+
+        Page<GetAppliedReservationResponseDto> page = rawPage.map(raw -> {
             boolean isAssetAvailable = assetQueryService.isAvailable(raw.getAssetId());
 
-            // 해당 시간대에 예약 가능 유무 판별
             boolean isReservableTime = isReservationTimeAvailable(
                     raw.getReservationId(), raw.getAssetId(), raw.getStartAt(), raw.getEndAt());
 
-            // 모든 신청 내역을 보여주되 가능한지에 대해 정보 제공
             boolean isReservable = isAssetAvailable && isReservableTime;
-            appliedReservations.add(GetAppliedReservationResponseDto.fromRaw(raw, isReservable));
-        }
 
-        int startIdx = (int) pageable.getOffset();
-        int endIdx = Math.min(startIdx + pageable.getPageSize(), appliedReservations.size());
-
-        if (startIdx >= appliedReservations.size()) {
-            return PageResponseDto.from(new PageImpl<>(Collections.emptyList(), pageable, appliedReservations.size()));
-        }
-
-        Page<GetAppliedReservationResponseDto> page =
-                new PageImpl<>(appliedReservations.subList(startIdx, endIdx), pageable, appliedReservations.size());
-
+            return GetAppliedReservationResponseDto.fromRaw(raw, isReservable);
+        });
         return PageResponseDto.from(page);
     }
 
@@ -434,5 +426,46 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
         }
 
         return true;
+    }
+
+    private DateRange resolveSearchDateRange(GetAppliedReservationSearchCondition condition) {
+
+        ZoneId zone = ZoneId.of("Asia/Seoul");
+
+        LocalDate start = condition.getStartDate();
+        LocalDate end = condition.getEndDate();
+
+        // 1. 기본값 (둘 다 null이면 최근 30일)
+        if (start == null && end == null) {
+            start = LocalDate.now(zone).minusDays(30);
+            end = LocalDate.now(zone);
+        }
+
+        // 2. 순서 검증
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_INVALID);
+        }
+
+        // 3. 최대 조회 기간 제한 (90일)
+        if (start != null && end != null && ChronoUnit.DAYS.between(start, end) > 90) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_SEARCH_PERIOD_EXCEEDED);
+        }
+
+        // 4. Instant 변환
+        Instant startInstant = start != null ? start.atStartOfDay(zone).toInstant() : null;
+
+        Instant endInstant = end != null ? end.plusDays(1).atStartOfDay(zone).toInstant() : null;
+
+        return DateRange.create(startInstant, endInstant);
+    }
+
+    private ReservationStatus parseStatus(String value) {
+        if (value == null) return null;
+
+        try {
+            return ReservationStatus.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_STATUS_INVALID);
+        }
     }
 }

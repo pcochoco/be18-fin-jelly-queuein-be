@@ -27,9 +27,9 @@ public class JwtBulkTokenGenerator implements CommandLineRunner {
             Files.writeString(
                     output, "userId,accessToken\n", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-            for (long userId = 4; userId <= 103; userId++) {
+            for (long userId = 1; userId <= 10; userId++) { // 관리자 계정
                 String token = jwtTokenProvider.generateAccessToken(
-                        userId, "GENERAL", "user" + userId + "@test.com", List.of());
+                        userId, "MANAGER", "user" + userId + "@test.com", List.of());
 
                 Files.writeString(output, userId + "," + token + "\n", StandardOpenOption.APPEND);
             }
