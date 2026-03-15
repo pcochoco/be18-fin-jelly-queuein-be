@@ -1,0 +1,1 @@
+CREATE INDEX idx_reservation_status_applied_deleted_start on RESERVATION(status, is_applied, deleted_at, start_at);
