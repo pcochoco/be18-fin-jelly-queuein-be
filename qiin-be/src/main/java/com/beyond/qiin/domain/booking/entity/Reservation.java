@@ -33,8 +33,7 @@ import org.hibernate.annotations.SQLRestriction;
             @Index(name = "idx_reservation_asset_id", columnList = "asset_id"),
             @Index(
                     name = "idx_reservation_status_applied_deleted_start",
-                    columnList = "status, is_applied, deleted_at, start_at"
-            )
+                    columnList = "status, is_applied, deleted_at, start_at")
         })
 @AttributeOverride(name = "id", column = @Column(name = "reservation_id"))
 @SQLRestriction("deleted_at is null")
