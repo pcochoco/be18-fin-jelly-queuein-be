@@ -42,7 +42,7 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
                     appliedReservationSearchCriteria.getDateRange().getStartDay()));
         }
 
-        if (appliedReservationSearchCriteria.getDateRange() != null) {
+        if (appliedReservationSearchCriteria.getDateRange().getEndDay() != null) {
             builder.and(reservation.startAt.lt(
                     appliedReservationSearchCriteria.getDateRange().getEndDay()));
         }

@@ -18,6 +18,12 @@ spring:
         jdbc:
           time_zone: UTC
 
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+
 
   # ----------------------------------------
   # AWS SES SMTP (이메일 발송) 설정 추가
