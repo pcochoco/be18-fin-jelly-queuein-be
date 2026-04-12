@@ -1,5 +1,8 @@
 
 spring:
+  cache:
+    type:
+      redis
   config:
     activate:
       on-profile: staging

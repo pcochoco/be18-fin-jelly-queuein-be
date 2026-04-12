@@ -1,4 +1,7 @@
 spring:
+  cache:
+    type:
+      redis
   config:
     activate:
       on-profile: prod
@@ -45,10 +48,6 @@ spring:
     baseline-version: "0"
     locations:
       - classpath:db/migration  # 마이그레이션 파일 경로 설정
-
-  # Redis 캐시 완전 비활성화
-  cache:
-    type: none
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
