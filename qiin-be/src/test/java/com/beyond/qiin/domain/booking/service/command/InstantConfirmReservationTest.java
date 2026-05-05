@@ -12,8 +12,10 @@ import com.beyond.qiin.domain.booking.dto.reservation.request.CreateReservationR
 import com.beyond.qiin.domain.booking.dto.reservation.response.ReservationResponseDto;
 import com.beyond.qiin.domain.booking.event.ReservationEventPublisher;
 import com.beyond.qiin.domain.booking.repository.AttendantJpaRepository;
+import com.beyond.qiin.domain.booking.repository.ReservationSlotJpaRepository;
 import com.beyond.qiin.domain.booking.support.AttendantWriter;
 import com.beyond.qiin.domain.booking.support.ReservationReader;
+import com.beyond.qiin.domain.booking.support.ReservationSlotManager;
 import com.beyond.qiin.domain.booking.support.ReservationWriter;
 import com.beyond.qiin.domain.iam.entity.User;
 import com.beyond.qiin.domain.iam.support.user.UserReader;
@@ -56,6 +58,12 @@ public class InstantConfirmReservationTest {
     @Mock
     private UsageHistoryCommandService usageHistoryCommandService;
 
+    @Mock
+    private ReservationSlotManager reservationSlotManager;
+
+    @Mock
+    private ReservationSlotJpaRepository reservationSlotJpaRepository;
+
     private Long userId;
     private Long assetId;
     private Instant startAt;
@@ -72,7 +80,9 @@ public class InstantConfirmReservationTest {
                 assetCommandService,
                 reservationEventPublisher,
                 attendantJpaRepository,
-                usageHistoryCommandService);
+                usageHistoryCommandService,
+                reservationSlotManager,
+                reservationSlotJpaRepository);
 
         userId = 1L;
         assetId = 100L;
