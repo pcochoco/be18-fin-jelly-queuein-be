@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -94,6 +95,14 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
     }
 
     // 신청 예약 목록 조회
+    @Cacheable(
+            cacheNames = "appliedReservations", // key prefix로 추가해 해당 캐시용으로 구별 용도
+            key = "@appliedReservationCachePolicy.defaultKey()", // 조건으로 확인했으므로 키 생성시는 condition, pageable 생략
+            // (default와 동일 키이기 때문)
+            condition = "@appliedReservationCachePolicy.isCacheable(#condition, #pageable)", // 캐시 적용 여부의 조건
+            sync = true // 동시 요청으로 인해 다수 cache miss 발생 가능
+            // 따라서 캐시가 비어있는 경우는 1 요청 캐시 생성 후 나머지 요청의 캐시 사용 적용(전부 cache miss로 적용 x이도록)
+            )
     @Override
     @Transactional(readOnly = true)
     public PageResponseDto<GetAppliedReservationResponseDto> getReservationApplies(
@@ -112,6 +121,7 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
         Page<RawAppliedReservationResponseDto> rawPage =
                 appliedReservationsQueryRepository.search(appliedReservationSearchCriteria, pageable);
 
+        // 예약 가능한지에 대해 포함해서 페이지 제공
         Page<GetAppliedReservationResponseDto> page = rawPage.map(raw -> {
             boolean isAssetAvailable = assetQueryService.isAvailable(raw.getAssetId());
 

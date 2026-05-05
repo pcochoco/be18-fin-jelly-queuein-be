@@ -6,11 +6,13 @@ import java.util.stream.StreamSupport;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor // 레디스가 json으로 받아 직렬화했던 정보를 역직렬화 해 제공 시 자바 객체로 생성하기 위함
 public class PageResponseDto<T> {
 
     private int page; // 현재 페이지 (0부터 시작)

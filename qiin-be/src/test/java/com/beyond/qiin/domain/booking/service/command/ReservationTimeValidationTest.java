@@ -36,6 +36,8 @@ class ReservationTimeValidationTest {
 
     private boolean check(String start, String end, List<Reservation> existing) {
         when(reservationReader.getActiveReservationsByAssetId(1L)).thenReturn(existing);
+
+        // TODO :
         return reservationService.isReservationTimeAvailable(null, 1L, Instant.parse(start), Instant.parse(end));
     }
 

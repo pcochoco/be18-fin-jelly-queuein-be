@@ -2,14 +2,13 @@ package com.beyond.qiin.domain.booking.dto.reservation.response.applied_reservat
 
 import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawAppliedReservationResponseDto;
 import com.beyond.qiin.domain.booking.enums.ReservationStatus;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.extern.jackson.Jacksonized;
 
 // 관리자 승인 / 거절
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Jacksonized
 @Getter
 public class GetAppliedReservationResponseDto {
 
@@ -23,7 +22,7 @@ public class GetAppliedReservationResponseDto {
     private final String applicantName;
 
     // 예약 가능 여부
-    private final boolean isReservable;
+    private final boolean reservable; // jacksonized에서 파악용 필드
 
     // 응답 시 필수 x
     // 승인자
@@ -49,7 +48,7 @@ public class GetAppliedReservationResponseDto {
                 .reservationStatus(
                         ReservationStatus.from(raw.getReservationStatus()).name())
                 .isApproved(raw.getIsApproved())
-                .isReservable(isReservable)
+                .reservable(isReservable)
                 .version(raw.getVersion())
                 .reason(raw.getReason())
                 .build();
