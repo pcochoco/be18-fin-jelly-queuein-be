@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
     // 승인 예약
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "appliedReservations", key = "@appliedReservationCachePolicy.defaultKey()")
     public ReservationResponseDto applyReservation(
             final Long userId, final Long assetId, final CreateReservationRequestDto createReservationRequestDto) {
 
@@ -136,6 +138,8 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         return ReservationResponseDto.fromEntity(reservation);
     }
 
+    // key 의 appliedReservations prefix 바탕으로 해당 시 삭제 및 default key를 통해 생성
+    @CacheEvict(cacheNames = "appliedReservations", key = "@appliedReservationCachePolicy.defaultKey()")
     @Override
     @Transactional
     public ReservationResponseDto approveReservation(
@@ -170,6 +174,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         return ReservationResponseDto.fromEntity(reservation);
     }
 
+    @CacheEvict(cacheNames = "appliedReservations", key = "@appliedReservationCachePolicy.defaultKey()")
     @Override
     @Transactional
     public ReservationResponseDto rejectReservation(
