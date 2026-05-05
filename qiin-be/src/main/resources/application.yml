@@ -61,3 +61,4 @@ cors:
 logging:
   level:
     org.springframework: INFO
+    com.domino.smerp: INFO
