@@ -34,7 +34,7 @@ public class RedisCacheConfig {
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
 
         // 신청 예약 목록 조회용 캐시
-        cacheConfigurations.put("appliedReservations", defaultConfig.entryTtl(Duration.ofSeconds(60))); //1분 ttl 
+        cacheConfigurations.put("appliedReservations", defaultConfig.entryTtl(Duration.ofMinutes(1))); // 1분 ttl
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig) // default config 추가
