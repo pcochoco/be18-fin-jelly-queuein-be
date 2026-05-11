@@ -159,7 +159,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
 
         List<Long> attendantUserIds = reservation.getAttendants().stream()
                 .map(a -> a.getUser().getId())
-                .filter(id -> !id.equals(userId)) //예약 신청자 본인 : 초대되었다는 알림 제외
+                .filter(id -> !id.equals(userId)) // 예약 신청자 본인 : 초대되었다는 알림 제외
                 .toList();
 
         reservationEventPublisher.publishEventCreated(reservation, attendantUserIds);
