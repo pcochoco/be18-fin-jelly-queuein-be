@@ -72,7 +72,7 @@ public class Notification {
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
     private Instant createdAt;
 
-    @Column(name = "deleted_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
+    @Column(name = "deleted_at", columnDefinition = "TIMESTAMP(6)")
     private Instant deletedAt;
 
     @PrePersist
