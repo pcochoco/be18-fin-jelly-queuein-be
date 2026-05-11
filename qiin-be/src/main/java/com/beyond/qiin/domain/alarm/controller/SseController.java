@@ -21,8 +21,7 @@ public class SseController {
     private final JwtTokenProvider jwtTokenProvider;
     private final SseService sseService;
 
-    // SSE 구독
-    //    @PreAuthorize("hasAnyAuthority('MASTER', 'ADMIN', 'MANAGER', 'GENERAL')")
+    // SSE 구독 - authorization header 사용 x(preauthorize : 권한 필요하지 않으므로 생략)
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@SseAccessToken String accessToken) {
 
@@ -31,8 +30,7 @@ public class SseController {
         return sseService.connect(userId);
     }
 
-    // SSE 구독 해제
-    //    @PreAuthorize("hasAnyAuthority('MASTER', 'ADMIN', 'MANAGER', 'GENERAL')")
+    // SSE 구독 해제 - authorization header 사용 x(preauthorize : 권한 필요하지 않으므로 생략)
     @DeleteMapping("/unsubscribe")
     public void unsubscribe(@AccessToken final String accessToken) {
         final Long userId = jwtTokenProvider.getUserId(accessToken);
