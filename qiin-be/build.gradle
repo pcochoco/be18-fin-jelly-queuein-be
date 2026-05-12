@@ -103,7 +103,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     // Development & Hot-Reload
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator' //actuator
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // Runtime Database Drivers
@@ -122,6 +122,9 @@ dependencies {
 
     // aws s3 사용하기 위한 의존성
     implementation 'software.amazon.awssdk:s3:2.20.0'
+
+    //prometheus 전용 변환기 (spring application json 에서 micrometer prometheus가 읽을 수 있는 key-value 형태 데이터로)
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
 }
 
