@@ -54,7 +54,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(SSE)
                         .permitAll()
-                        .requestMatchers(ACTUATOR)
+                        .requestMatchers(ACTUATOR) // 운영 시에는 특정 권한자만 접근 가능하도록 수정, 개발용이므로 permitAll
                         .permitAll()
                         .requestMatchers(AUTH)
                         .permitAll()
