@@ -83,11 +83,11 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
 
   prometheus: #지표 수집과 저장
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.1.2
     container_name: prometheus
     restart: unless-stopped
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml #참고할 설정파일 경로
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -96,7 +96,7 @@ services:
       - "9090:9090"
 
   grafana: #지표 시각화 대시보드
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.4.0
     container_name: grafana
     restart: unless-stopped
     ports:
@@ -110,14 +110,12 @@ services:
 
   #mariadb에 접속해 데이터를 가져오고 프로메테우스가 이해하는 형식으로 변환해주는 용도
   mariadb-exporter:
-    image: prom/mysqld-exporter:latest
+    image: prom/mysqld-exporter:v0.17.0
     container_name: mariadb-exporter
     command:
       - --mysqld.username=${SPRING_DATASOURCE_USERNAME}
       - --mysqld.address=mariadb:3306
       - --no-collect.slave_status #복제 상태 모니터링 x
-      - --no-collect.info_schema.innodb_metrics
-      - --no-collect.info_schema.innodb_cmpmem
     environment:
       MYSQLD_EXPORTER_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     ports:
