@@ -2,6 +2,8 @@ package com.beyond.qiin.security.constants;
 
 public final class SecurityWhitelist {
 
+    public static final String[] PUBLIC = {"/"};
+
     // 내부 시스템 호출용 API
     public static final String[] INTERNAL = {"/internal/**"};
 
@@ -10,7 +12,7 @@ public final class SecurityWhitelist {
 
     public static final String[] SSE = {"/api/v1/sse/**"};
 
-    public static final String[] ACTUATOR = {"/", "/actuator/health", "/actuator/info"};
+    public static final String[] ACTUATOR = {"/actuator", "/actuator/health", "/actuator/info", "/actuator/prometheus"};
 
     // 인스턴스화 방지
     private SecurityWhitelist() {}
