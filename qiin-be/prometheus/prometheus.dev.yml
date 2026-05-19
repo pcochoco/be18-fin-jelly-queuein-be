@@ -1,6 +1,6 @@
 #전역 설정
 global:
-  scrape_interval: ${SCRAPE_INTERVAL} # 5초마다 데이터 수집(부하테스트용)
+  scrape_interval: 5s # 5초마다 데이터 수집(부하테스트용)
 
 #감시할 대상에 대한 정의
 scrape_configs:
