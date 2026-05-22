@@ -83,7 +83,7 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
 
   prometheus: #지표 수집과 저장
-    image: prom/prometheus:v2.54.1
+    image: prom/prometheus:v3.0.1
     container_name: prometheus
     restart: unless-stopped
     volumes:
