@@ -63,8 +63,8 @@ cors:
 management:
   endpoints: #http 로 정보 외부로 노출
     web:
-      exposure: #/actuator/prometheus, /actuator/health, /actuator/info의 경로
-        include: prometheus, health, info #프로메테우스가 읽어갈 수 있는 형식의 데이터, 서버의 상태(up, down), 애플리케이션 정보
+      exposure: #/actuator/prometheus, /actuator/health
+        include: prometheus, health #프로메테우스가 읽어갈 수 있는 형식의 데이터, 서버의 상태(up, down), 애플리케이션 정보
   endpoint:
     prometheus:
       enabled: true #프로메테우스용 데이터 수집 활성화
