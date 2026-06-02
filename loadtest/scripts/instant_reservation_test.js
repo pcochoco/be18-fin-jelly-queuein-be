@@ -23,7 +23,7 @@ export const options = {
   scenarios: {
     instant_reservation_load: {
       executor: 'constant-vus', //vu 수 고정 
-      vus: 20, //virtual user 20 
+      vus: 50, //virtual user 20 
       duration: '30s', //30초동안 요청
     },
   },
