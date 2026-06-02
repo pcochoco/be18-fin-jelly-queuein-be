@@ -1,6 +1,5 @@
 package com.beyond.qiin.domain.alarm.service;
 
-
 import com.beyond.qiin.infra.kafka.reservation.event.ReservationEventPayload;
 
 public interface NotificationCommandService {

@@ -7,5 +7,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SseUserId { //@가 붙은 인터페이스 : annotation type
+public @interface SseUserId { // @가 붙은 인터페이스 : annotation type
 }

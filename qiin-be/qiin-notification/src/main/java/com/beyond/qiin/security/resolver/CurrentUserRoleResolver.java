@@ -1,8 +1,7 @@
 package com.beyond.qiin.security.resolver;
 
-import java.util.List;
-
 import com.beyond.qiin.security.exceptions.AuthException;
+import java.util.List;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

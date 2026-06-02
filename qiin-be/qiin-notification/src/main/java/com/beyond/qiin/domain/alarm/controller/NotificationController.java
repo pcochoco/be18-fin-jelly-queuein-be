@@ -5,9 +5,7 @@ import com.beyond.qiin.domain.alarm.dto.NotificationResponseDto;
 import com.beyond.qiin.domain.alarm.entity.Notification;
 import com.beyond.qiin.domain.alarm.service.NotificationCommandService;
 import com.beyond.qiin.domain.alarm.support.NotificationReader;
-import com.beyond.qiin.security.SecurityUtils;
 import com.beyond.qiin.security.jwt.JwtTokenProvider;
-import com.beyond.qiin.security.resolver.AccessToken;
 import com.beyond.qiin.security.resolver.CurrentUserId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -64,8 +62,7 @@ public class NotificationController {
     // 알림 읽음 처리
     @PreAuthorize("hasAnyAuthority('MASTER', 'ADMIN', 'MANAGER', 'GENERAL')")
     @PatchMapping("/{notificationId}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long notificationId,
-                                           @CurrentUserId Long userId) {
+    public ResponseEntity<Void> markAsRead(@PathVariable Long notificationId, @CurrentUserId Long userId) {
 
         notificationCommandService.markAsRead(notificationId, userId);
         return ResponseEntity.noContent().build(); // 204
@@ -73,8 +70,7 @@ public class NotificationController {
 
     @PreAuthorize("hasAnyAuthority('MASTER', 'ADMIN', 'MANAGER', 'GENERAL')")
     @DeleteMapping("/{notificationId}")
-    public ResponseEntity<Void> deleteNotification(
-            @PathVariable Long notificationId, @CurrentUserId Long userId) {
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long notificationId, @CurrentUserId Long userId) {
 
         notificationCommandService.softDelete(notificationId, userId);
         return ResponseEntity.noContent().build();

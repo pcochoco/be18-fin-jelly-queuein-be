@@ -1,12 +1,11 @@
 package com.beyond.qiin.infra.event.reservation;
 
 import com.beyond.qiin.common.enums.EnumCode;
+import com.beyond.qiin.domain.booking.exception.ReservationErrorCode;
+import com.beyond.qiin.domain.booking.exception.ReservationException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.beyond.qiin.domain.booking.exception.ReservationErrorCode;
-import com.beyond.qiin.domain.booking.exception.ReservationException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +42,7 @@ public enum ReservationEventType implements EnumCode {
         }
         return type;
     }
+
     @Override
     public int getCode() {
         return this.code;

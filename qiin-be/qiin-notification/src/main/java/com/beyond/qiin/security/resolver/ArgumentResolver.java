@@ -17,8 +17,8 @@ public class ArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Override
     public boolean supportsParameter(final MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AccessToken.class) //controller parameter @AccessToken
-                && parameter.getParameterType().equals(String.class); //String
+        return parameter.hasParameterAnnotation(AccessToken.class) // controller parameter @AccessToken
+                && parameter.getParameterType().equals(String.class); // String
     }
 
     @Override
