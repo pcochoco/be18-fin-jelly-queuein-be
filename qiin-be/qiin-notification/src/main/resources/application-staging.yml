@@ -1,0 +1,51 @@
+
+spring:
+  cache:
+    type:
+      redis
+  config:
+    activate:
+      on-profile: staging
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: "0"
+    locations:
+      - classpath:db/migration
+      - classpath:db/seed/dev
+
+  # Kafka 설정
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS} # Kafka 접속 정보 지정
+    topic:
+      topics:
+        reservation-event: reservation-event-topic
+
+    consumer:
+      auto-offset-reset: earliest
+      group-id: reservation-group
+      #역직렬화
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+server:
+  port: ${SERVER_PORT:8081}
+
+logging:
+  level:
+    root: INFO
+    com.beyond.qiin: DEBUG

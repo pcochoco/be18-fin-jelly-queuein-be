@@ -3,11 +3,11 @@ FROM gradle:8.10.0-jdk21 AS builder
 WORKDIR /home/gradle/src
 COPY . .
 ENV DOCKER_BUILD=true
-RUN gradle clean bootJar --no-daemon
+RUN gradle clean :qiin-notification:bootJar --no-daemon
 
 # 2. 실행
 FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
-COPY --from=builder /home/gradle/src/build/libs/*.jar app.jar
-EXPOSE 8080
+COPY --from=builder /home/gradle/src/qiin-notification/build/libs/*.jar app.jar
+EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,19 @@
+package com.beyond.qiin.security.constants;
+
+public final class SecurityWhitelist {
+
+    public static final String[] PUBLIC = {"/"};
+
+    // 내부 시스템 호출용 API
+    public static final String[] INTERNAL = {"/internal/**"};
+
+    // 로그인 / 리프레시 등 인증 없이 접근 가능한 API
+    public static final String[] AUTH = {"/api/v1/auth/**"};
+
+    //sse를 다른 서버에서 관리
+
+    public static final String[] ACTUATOR = {"/actuator", "/actuator/health", "/actuator/info", "/actuator/prometheus"};
+
+    // 인스턴스화 방지
+    private SecurityWhitelist() {}
+}
