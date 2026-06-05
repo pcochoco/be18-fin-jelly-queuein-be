@@ -54,10 +54,12 @@ ext {
 dependencies {
     // Spring Boot Starter Dependencies
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    //kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 
     // security
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -115,10 +117,6 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // Excel (Apache POI)
-    implementation 'org.apache.poi:poi:5.2.5'
-    implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
     // aws s3 사용하기 위한 의존성
     implementation 'software.amazon.awssdk:s3:2.20.0'
