@@ -124,9 +124,11 @@ services:
       mariadb:
         condition: service_healthy
 
-  app:
-    build: .
-    container_name: qiin-app
+  qiin-api: #service 명(compose가 관리하는 논리 이름)
+    build:
+      context: .
+      dockerfile: qiin-api/dockerfile #qiin-api docker file 경로 지정
+    container_name: qiin-api
     depends_on:
       mariadb:
         condition: service_healthy
@@ -165,6 +167,42 @@ services:
     restart: always
     volumes:
       - ./output:/output
+
+  qiin-notification: #notification 서버 분리
+    build:
+      context: .
+      dockerfile: qiin-notification/dockerfile #qiin-api docker file 경로 지정
+    container_name: qiin-notification
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      TZ: UTC
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      LOGIN_URL: ${LOGIN_URL}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
+      AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+    restart: always
+
 
 volumes:
   mariadb_data:
