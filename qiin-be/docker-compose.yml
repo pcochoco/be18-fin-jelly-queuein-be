@@ -27,15 +27,15 @@ services:
     container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-qiin_rag}
-      POSTGRES_USER: ${POSTGRES_USER:-qiin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qiin}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-qiin} -d ${POSTGRES_DB:-qiin_rag}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -151,6 +151,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
         #kafka가 다운되더라도 api 서버를 띄운 후 outbox 활용해 전달해 서비스 유지
@@ -183,13 +185,16 @@ services:
       AWS_S3_ACCESS_KEY: ${AWS_S3_ACCESS_KEY}
       AWS_S3_SECRET_KEY: ${AWS_S3_SECRET_KEY}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-      MY_OPENAI_KEY: ${MY_OPENAI_KEY}
-      RAG_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-qiin_rag}
-      RAG_DATASOURCE_USERNAME: ${POSTGRES_USER:-qiin}
-      RAG_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-qiin}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL}
+      GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL}
+      RAG_POSTGRES_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      RAG_POSTGRES_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      RAG_POSTGRES_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     restart: always
     volumes:
       - ./output:/output
+      - ../docs:/app/docs:ro #docker-compose.yml 기준 ../docs를 컨테이너의 /app/docs에 연결, read only(ro)
 
   qiin-notification: #notification 서버 분리
     build:
