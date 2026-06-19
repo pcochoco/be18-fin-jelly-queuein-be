@@ -17,7 +17,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+//embedding model을 이용해 문서를 벡터화하고, chunking 전략에 따라 문서를 분할하여 DB에 저장하는 서비스
 @Service
 @RequiredArgsConstructor
 public class RagIngestionService {
@@ -29,7 +29,9 @@ public class RagIngestionService {
 
     @Transactional(transactionManager = "ragTransactionManager")
     public Long ingest(ParsedDocument parsedDocument, ChunkingStrategy strategy) {
+
         DocumentChunker chunker = chunkerResolver.resolve(strategy);
+        
         List<ChunkData> chunkDataList = chunker.chunk(parsedDocument);
 
         if (chunkDataList.isEmpty()) {
@@ -44,8 +46,10 @@ public class RagIngestionService {
         List<DocumentChunk> chunks = new ArrayList<>();
 
         for (ChunkData chunkData : chunkDataList) {
+            //embedding model 호출해서 벡터화
             String embedding = embeddingClient.embed(chunkData.content());
 
+            //chunk entity 생성
             chunks.add(new DocumentChunk(
                     document, chunkData.chunkIndex(), chunkData.sourceKey(), chunkData.content(), embedding));
         }
@@ -55,6 +59,7 @@ public class RagIngestionService {
         return document.getId();
     }
 
+    //delete old version of document if exists
     private void replaceExistingDocument(String sourceUrl, ChunkingStrategy strategy) {
         List<RagDocument> existingDocuments =
                 documentRepository.findAllBySourceUrlAndChunkingStrategy(sourceUrl, strategy);
@@ -63,7 +68,10 @@ public class RagIngestionService {
             return;
         }
 
+        //delete all chunks of according documents
         chunkRepository.deleteAllByDocumentInBatch(existingDocuments);
+
+        //delete documents 
         documentRepository.deleteAllInBatch(existingDocuments);
     }
 }

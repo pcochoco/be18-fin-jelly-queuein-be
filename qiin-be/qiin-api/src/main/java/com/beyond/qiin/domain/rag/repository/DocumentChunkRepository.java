@@ -9,14 +9,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+//입력 embedding과 가장 가까운 chunk 찾기 (유사도 검색
 public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Long> {
 
+    //jpa에서 벡터 연산 지원 안하기 때문에 사용 
+    //<=> : 값이 작을 수록 유사 
+    //cast as vector : 문자열로 저장된 벡터를 벡터 타입으로 변환
+    
     @Query(
             value =
                     """
         SELECT *
         FROM document_chunk
-        ORDER BY embedding <=> CAST(:embedding AS vector)
+        ORDER BY embedding <=> CAST(:embedding AS vector) 
         LIMIT :limit
         """,
             nativeQuery = true)

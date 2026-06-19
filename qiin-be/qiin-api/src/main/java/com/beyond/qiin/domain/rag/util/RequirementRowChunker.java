@@ -7,9 +7,9 @@ import com.beyond.qiin.domain.rag.enums.ChunkingStrategy;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
-
+//TODO : 생략 가능한지
 @Component
-public class RequirementRowChunker implements DocumentChunker {
+public class RequirementRowChunker implements DocumentChunker { //TODO : Impl
 
     @Override
     public ChunkingStrategy supports() {

@@ -22,24 +22,22 @@ public class DocumentChunk extends BaseEntity {
     @JoinColumn(name = "document_id", nullable = false)
     private RagDocument document;
 
+    //chunk pk : chunk 들이 모인 테이블 내 식별값
+    //chunk index : 하나의 document에 대해 식별값 
     @Column(name = "chunk_index", nullable = false)
     private Integer chunkIndex;
 
-    /**
-     * REV-005 같은 원본 요구사항 ID
-     */
+    //REV-005 같은 원본 요구사항 ID    
     @Column(name = "source_key", nullable = false, length = 100)
     private String sourceKey;
 
-    /**
-     * 행의 각 필드명을 포함해 구성한 최종 청크 텍스트
-     */
+    //readable content return after search by embedding value 
+    //행의 각 필드명을 포함해 구성한 최종 청크 텍스트
     @Column(name = "content", nullable = false, columnDefinition = "text")
     private String content;
 
-    /**
-     * pgvector가 파싱할 수 있는 문자열 형태의 벡터. 예: [0.1, 0.2, ...]
-     */
+    //pgvector가 파싱할 수 있는 문자열 형태의 벡터. 예: [0.1, 0.2, ...]
+    //embedding model searches for semantically similar chunks 
     @ColumnTransformer(write = "?::vector")
     @Column(name = "embedding", nullable = false, columnDefinition = "vector(3072)")
     private String embedding;

@@ -7,9 +7,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+//TODO : 생략 가능한지
 @Component
 @RequiredArgsConstructor
-public class DocumentChunkerResolver {
+public class DocumentChunkerResolver { 
 
     private final List<DocumentChunker> chunkers;
 

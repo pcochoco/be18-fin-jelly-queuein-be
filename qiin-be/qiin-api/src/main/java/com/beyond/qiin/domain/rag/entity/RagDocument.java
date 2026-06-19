@@ -24,7 +24,7 @@ public class RagDocument extends BaseEntity {
     private String sourceUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "chunking_strategy", nullable = false, length = 30)
+    @Column(name = "chunking_strategy", nullable = false, length = 30) //default : requirement row 
     private ChunkingStrategy chunkingStrategy;
 
     public RagDocument(String title, String sourceUrl, ChunkingStrategy chunkingStrategy) {
