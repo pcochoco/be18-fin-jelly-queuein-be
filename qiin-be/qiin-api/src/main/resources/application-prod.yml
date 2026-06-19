@@ -39,7 +39,7 @@ spring:
     baseline-on-migrate: true
     baseline-version: "0"
     locations:
-      - classpath:db/migration  # 마이그레이션 파일 경로 설정
+      - classpath:db/migration/mariadb
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
@@ -51,8 +51,30 @@ logging:
     root: WARN
     com.beyond.qiin: INFO
 
-openai:
-  base-url: https://api.openai.com/v1
-  api-key: ${MY_OPENAI_KEY}
-  model: gpt-4.1-mini
+gemini:
+  base-url: https://generativelanguage.googleapis.com/v1beta
+  api-key: ${GEMINI_API_KEY}
+
+  #답변 모델
+  model: ${GEMINI_MODEL:gemini-3.1-flash-lite}
+
+  #embedding 모델
+  embedding-model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-2}
   temperature: 0.2
+
+#document chunk에 대한 embedding 용
+rag:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: "0"
+    locations: classpath:db/migration/postgresql
+  datasource:
+    url: ${RAG_POSTGRES_DATASOURCE_URL}
+    username: ${RAG_POSTGRES_DATASOURCE_USERNAME}
+    password: ${RAG_POSTGRES_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
