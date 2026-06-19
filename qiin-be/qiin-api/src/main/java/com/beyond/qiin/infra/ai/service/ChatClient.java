@@ -1,28 +1,31 @@
 package com.beyond.qiin.infra.ai.service;
 
 import com.beyond.qiin.domain.chat.dto.IntentResultDto;
-import com.beyond.qiin.infra.ai.dto.OpenAiMessage;
-import com.beyond.qiin.infra.ai.dto.OpenAiRequestDto;
-import com.beyond.qiin.infra.ai.dto.OpenAiResponseDto;
+import com.beyond.qiin.domain.chat.exception.ChatErrorCode;
+import com.beyond.qiin.domain.chat.exception.ChatException;
+import com.beyond.qiin.infra.ai.dto.GeminiContent;
+import com.beyond.qiin.infra.ai.dto.GeminiGenerateRequestDto;
+import com.beyond.qiin.infra.ai.dto.GeminiGenerateResponseDto;
+import com.beyond.qiin.infra.ai.dto.GeminiGenerationConfig;
+import com.beyond.qiin.infra.ai.dto.GeminiPart;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
-import java.util.List;
-
-//일반 답 생성, intent 추출용
 @Component
 @RequiredArgsConstructor
-public class ChatbotClient {
-    private static final String CHAT_SYSTEM_PROMPT =
-            "당신은 QueueIn 예약 시스템 비서입니다.";
+public class ChatClient {
+    private static final String CHAT_SYSTEM_PROMPT = "당신은 QueueIn 예약 시스템 비서입니다.";
 
     private static final String INTENT_SYSTEM_PROMPT =
             """
             당신은 QueueIn 예약 시스템의 챗봇 분석 엔진입니다.
-            사용자의 자연어 입력을 읽고, 아래 7개의 Intent 중 하나로 반드시 분류하여 JSON 형태로 출력하세요.
+            사용자의 자연어 입력을 읽고, 아래 8개의 Intent 중 하나로 반드시 분류하여 JSON 형태로 출력하세요.
 
             반드시 아래 JSON 스키마를 사용하세요:
 
@@ -60,7 +63,12 @@ public class ChatbotClient {
             - 사용자가 전체 카테고리 목록을 요청할 때 사용합니다.
             - params: {}
 
-            7) UNKNOWN
+            7) RAG_SEARCH
+            - 사용자가 QueueIn 요구사항 정의서, 요구사항, 정책, 기능 명세, 문서 내용에 대해 질문할 때 사용합니다.
+            - params: { "query": string }
+            - query에는 사용자의 질문 원문을 그대로 넣으십시오.
+
+            8) UNKNOWN
             - 위 Intent 목록 중 어느 것에도 명확하게 속하지 않으면 사용합니다.
             - params: {}
 
@@ -79,10 +87,10 @@ public class ChatbotClient {
     private static final String RAG_SYSTEM_PROMPT =
             """
             당신은 QueueIn 예약 시스템의 문서 기반 안내 비서입니다.
-    
+
             반드시 제공된 [문서 내용]만 근거로 답변하세요.
             문서에 없는 내용은 추측하지 말고 "제공된 문서에서 확인할 수 없습니다."라고 답하세요.
-    
+
             답변 규칙:
             - 사용자가 이해하기 쉽게 자연스럽게 설명합니다.
             - 문서 내용과 관련 없는 일반 지식은 사용하지 않습니다.
@@ -90,33 +98,33 @@ public class ChatbotClient {
             - 필요한 경우 핵심 내용을 짧게 정리합니다.
             """;
 
-    private final RestClient openAiRestClient;
+    private final RestClient geminiRestClient;
 
     private final ObjectMapper objectMapper;
 
-    @Value("${openai.model}")
+    @Value("${gemini.model}")
     private String model;
 
-    @Value("${openai.temperature}")
+    @Value("${gemini.temperature}")
     private Double temperature;
 
     public String sendMessage(String userMessage) {
-        OpenAiRequestDto request = createChatRequest(userMessage);
-        OpenAiResponseDto response = callOpenAi(request);
+        GeminiGenerateRequestDto request = createChatRequest(userMessage);
+        GeminiGenerateResponseDto response = callGemini(request);
 
         return extractContent(response);
     }
 
     public String answerWithRag(String userQuestion, String context) {
-        OpenAiRequestDto request = createRagRequest(userQuestion, context);
-        OpenAiResponseDto response = callOpenAi(request);
+        GeminiGenerateRequestDto request = createRagRequest(userQuestion, context);
+        GeminiGenerateResponseDto response = callGemini(request);
 
         return extractContent(response);
     }
 
     public IntentResultDto extractIntent(String userMessage) {
-        OpenAiRequestDto request = createIntentRequest(userMessage);
-        OpenAiResponseDto response = callOpenAi(request);
+        GeminiGenerateRequestDto request = createIntentRequest(userMessage);
+        GeminiGenerateResponseDto response = callGemini(request);
 
         String raw = extractContent(response);
         String json = cleanJson(raw);
@@ -124,89 +132,79 @@ public class ChatbotClient {
         return parseIntent(json);
     }
 
-    //챗봇용 요청
-    private OpenAiRequestDto createChatRequest(String userMessage) {
-        return createRequest(
-                temperature,
-                List.of(
-                        new OpenAiMessage("system", CHAT_SYSTEM_PROMPT),
-                        new OpenAiMessage("user", userMessage)
-                )
-        );
+    private GeminiGenerateRequestDto createChatRequest(String userMessage) {
+        return createRequest(CHAT_SYSTEM_PROMPT, temperature, userMessage);
     }
 
-    //intent 분석용 요청 생성
-    private OpenAiRequestDto createIntentRequest(String userMessage) {
-        return createRequest(
-                0.0,
-                List.of(
-                        new OpenAiMessage("system", INTENT_SYSTEM_PROMPT),
-                        new OpenAiMessage("user", userMessage)
-                )
-        );
+    private GeminiGenerateRequestDto createIntentRequest(String userMessage) {
+        return createRequest(INTENT_SYSTEM_PROMPT, 0.0, userMessage);
     }
 
-    //dto 생성 담당
-    private OpenAiRequestDto createRequest(
-            Double temperature,
-            List<OpenAiMessage> messages
-    ) {
-        OpenAiRequestDto request = new OpenAiRequestDto();
-        request.setModel(model);
-        request.setTemperature(temperature);
-        request.setMessages(messages);
-        return request;
+    private GeminiGenerateRequestDto createRagRequest(String userQuestion, String context) {
+        return createRequest(RAG_SYSTEM_PROMPT, 0.0, "[문서 내용]\n" + context + "\n\n[사용자 질문]\n" + userQuestion);
     }
 
-
-
-    private OpenAiResponseDto callOpenAi(OpenAiRequestDto request) {
-        return openAiRestClient
-                .post()
-                .uri("/chat/completions")
-                .body(request)
-                .retrieve()
-                .body(OpenAiResponseDto.class);
+    private GeminiGenerateRequestDto createRequest(String systemPrompt, Double temperature, String userMessage) {
+        return new GeminiGenerateRequestDto(
+                GeminiContent.system(systemPrompt),
+                List.of(GeminiContent.user(userMessage)),
+                new GeminiGenerationConfig(temperature));
     }
 
-    //응답 dto에서 content 문자열을 꺼냄
-    private String extractContent(OpenAiResponseDto response) {
+    private GeminiGenerateResponseDto callGemini(GeminiGenerateRequestDto request) {
+        try {
+            return geminiRestClient
+                    .post()
+                    .uri("/models/{model}:generateContent", model)
+                    .body(request)
+                    .retrieve()
+                    .body(GeminiGenerateResponseDto.class);
+        } catch (RestClientResponseException e) {
+            if (HttpStatus.TOO_MANY_REQUESTS.value() == e.getStatusCode().value()) {
+                throw new ChatException(ChatErrorCode.LLM_RATE_LIMIT_EXCEEDED);
+            }
+            throw new ChatException(ChatErrorCode.LLM_REQUEST_FAILED, e.getMessage());
+        }
+    }
+
+    private String extractContent(GeminiGenerateResponseDto response) {
         if (response == null
-                || response.getChoices() == null
-                || response.getChoices().length == 0
-                || response.getChoices()[0].getMessage() == null
-                || response.getChoices()[0].getMessage().getContent() == null) {
-            throw new RuntimeException("OpenAI 응답이 비어있습니다.");
+                || response.candidates() == null
+                || response.candidates().isEmpty()
+                || response.candidates().get(0).content() == null
+                || response.candidates().get(0).content().parts() == null
+                || response.candidates().get(0).content().parts().isEmpty()) {
+            throw new ChatException(ChatErrorCode.LLM_RESPONSE_EMPTY);
         }
 
-        return response.getChoices()[0].getMessage().getContent();
+        return response.candidates().get(0).content().parts().stream()
+                .map(GeminiPart::text)
+                .filter(text -> text != null && !text.isBlank())
+                .reduce("", String::concat);
     }
 
-    //json 문자열을 java 객체로
+    // json 문자열을 java 객체로
     private IntentResultDto parseIntent(String json) {
         try {
             return objectMapper.readValue(json, IntentResultDto.class);
         } catch (Exception e) {
-            throw new RuntimeException("Intent JSON 파싱 실패: " + json, e);
+            throw new ChatException(ChatErrorCode.LLM_INTENT_PARSE_FAILED, "Intent JSON 파싱 실패: " + json);
         }
     }
 
-    //답변을 순수 json 문자열로
+    // 답변을 순수 json 문자열로
     private String cleanJson(String raw) {
         if (raw == null) {
-            throw new RuntimeException("LLM 응답이 비어있습니다.");
+            throw new ChatException(ChatErrorCode.LLM_RESPONSE_EMPTY);
         }
 
-        String cleaned = raw
-                .replace("```json", "")
-                .replace("```", "")
-                .trim();
+        String cleaned = raw.replace("```json", "").replace("```", "").trim();
 
         int start = cleaned.indexOf("{");
         int end = cleaned.lastIndexOf("}");
 
         if (start == -1 || end == -1) {
-            throw new RuntimeException("LLM 응답에서 JSON 블록을 찾을 수 없습니다: " + cleaned);
+            throw new ChatException(ChatErrorCode.LLM_INTENT_PARSE_FAILED, "LLM 응답에서 JSON 블록을 찾을 수 없습니다: " + cleaned);
         }
 
         return cleaned.substring(start, end + 1);

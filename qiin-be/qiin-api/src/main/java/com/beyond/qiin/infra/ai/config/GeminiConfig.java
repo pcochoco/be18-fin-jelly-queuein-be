@@ -6,19 +6,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-public class OpenAiConfig {
+public class GeminiConfig {
 
-    @Value("${openai.base-url}")
+    @Value("${gemini.base-url}")
     private String baseUrl;
 
-    @Value("${openai.api-key}")
+    @Value("${gemini.api-key}")
     private String apiKey;
 
     @Bean
-    public RestClient openAiRestClient() {
+    public RestClient geminiRestClient() {
         return RestClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .defaultHeader("x-goog-api-key", apiKey)
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
