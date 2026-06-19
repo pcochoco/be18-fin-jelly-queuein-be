@@ -3,6 +3,7 @@ package com.beyond.qiin.domain.iam.support.rolepermission;
 import com.beyond.qiin.domain.iam.entity.Permission;
 import com.beyond.qiin.domain.iam.entity.Role;
 import com.beyond.qiin.domain.iam.entity.RolePermission;
+import com.beyond.qiin.domain.iam.exception.RolePermissionException;
 import com.beyond.qiin.domain.iam.repository.RolePermissionJpaRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,7 @@ public class RolePermissionReader {
 
     // 단건 조회 필요 시
     public RolePermission findById(final Long id) {
-        return rolePermissionJpaRepository
-                .findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("RolePermission not found"));
+        return rolePermissionJpaRepository.findById(id).orElseThrow(RolePermissionException::notFound);
     }
 
     // Permission이 하나라도 참조 중인지 true

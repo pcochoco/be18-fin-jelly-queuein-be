@@ -69,3 +69,14 @@ AWS_S3_ACCESS_KEY: dummy-access
 AWS_S3_SECRET_KEY: dummy-secret
 AWS_S3_BUCKET: dummy-bucket
 AWS_REGION: ap-northeast-2
+
+rag:
+  datasource:
+    url: jdbc:h2:mem:ragtestdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none

@@ -1,7 +1,7 @@
 package com.beyond.qiin;
 
 import com.beyond.qiin.config.TestRedisConfig;
-import com.beyond.qiin.infra.ai.service.ChatbotClient;
+import com.beyond.qiin.infra.ai.service.ChatClient;
 import com.beyond.qiin.infra.redis.iam.role.RoleRedisRepository;
 import com.beyond.qiin.infra.redis.inventory.AssetDetailRedisAdapter;
 import com.beyond.qiin.infra.redis.inventory.AssetDetailRedisRepository;
@@ -42,7 +42,7 @@ class QiinApplicationTests {
     private AssetTreeRedisAdapter assetTreeRedisAdapter;
 
     @MockBean
-    private ChatbotClient chatbotClient;
+    private ChatClient chatClient;
 
     @Test
     void contextLoads() {}

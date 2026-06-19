@@ -3,6 +3,7 @@ package com.beyond.qiin.domain.accounting.service.query;
 import com.beyond.qiin.domain.accounting.dto.common.request.ReportingComparisonRequestDto;
 import com.beyond.qiin.domain.accounting.dto.settlement.response.SettlementPerformanceResponseDto;
 import com.beyond.qiin.domain.accounting.dto.settlement.response.raw.SettlementPerformanceRawDto;
+import com.beyond.qiin.domain.accounting.exception.SettlementException;
 import com.beyond.qiin.domain.accounting.repository.querydsl.SettlementPerformanceQueryAdapter;
 import com.beyond.qiin.infra.redis.accounting.settlement.SettlementPerformanceMonthRedisAdapter;
 import java.math.BigDecimal;
@@ -32,7 +33,7 @@ public class SettlementPerformanceQueryServiceImpl implements SettlementPerforma
         Long assetId = resolveAssetIdFromName(assetName);
 
         if (assetName != null && !assetName.isBlank() && assetId == null) {
-            throw new IllegalArgumentException("자원명을 잘못 입력하셨습니다.");
+            throw SettlementException.invalidAssetName();
         }
 
         // DB 조회 (한 번만)

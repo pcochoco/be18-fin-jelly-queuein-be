@@ -15,9 +15,14 @@ public class SettlementException extends BaseException {
         return new SettlementException(SettlementErrorCode.SETTLEMENT_NOT_FOUND);
     }
 
+    public static SettlementException invalidAssetName() {
+        return new SettlementException(SettlementErrorCode.INVALID_ASSET_NAME);
+    }
+
     @Getter
     public enum SettlementErrorCode implements ErrorCode {
-        SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT_NOT_FOUND", "해당 정산 정보를 찾을 수 없습니다.");
+        SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT_NOT_FOUND", "해당 정산 정보를 찾을 수 없습니다."),
+        INVALID_ASSET_NAME(HttpStatus.BAD_REQUEST, "INVALID_ASSET_NAME", "존재하지 않는 자원명입니다.");
 
         private final HttpStatus status;
         private final String error;

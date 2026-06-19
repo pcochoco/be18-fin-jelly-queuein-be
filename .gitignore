@@ -76,3 +76,6 @@ gradle.properties
 
 ### user token csv ###
 /qiin-be/output
+
+### bootRun logs ###
+/qiin-be/*-bootrun*.log
