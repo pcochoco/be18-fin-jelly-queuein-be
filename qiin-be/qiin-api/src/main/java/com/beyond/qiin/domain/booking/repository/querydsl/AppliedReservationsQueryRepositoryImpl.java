@@ -84,6 +84,7 @@ public class AppliedReservationsQueryRepositoryImpl implements AppliedReservatio
                         RawAppliedReservationResponseDto.class,
                         asset.id,
                         asset.name,
+                        asset.status,
                         reservation.id,
                         applicant.userName,
                         respondent.userName,

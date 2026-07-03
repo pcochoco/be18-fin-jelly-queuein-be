@@ -199,10 +199,9 @@ public class Reservation extends BaseEntity {
     }
 
     public void changeSchedule(Instant startAt, Instant endAt) {
-        // pending일때 시간 변경 가능(승인전)
-        if (this.status != ReservationStatus.PENDING.getCode())
+        // pending, approved일때 시간 변경 가능(사용전)
+        if (this.status != ReservationStatus.PENDING.getCode() && this.status != ReservationStatus.APPROVED.getCode())
             throw new ReservationException(ReservationErrorCode.RESERVATION_STATUS_CHANGE_NOT_ALLOWED);
-        // TODO : time slot 제거, 변경 시각으로 다시 넣는 것을 시도
         this.startAt = startAt;
         this.endAt = endAt;
     }

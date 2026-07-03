@@ -1,4 +1,4 @@
-package com.beyond.qiin.domain.booking.service.command;
+package com.beyond.qiin.domain.booking.service.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -22,7 +22,7 @@ class ReservationTimeValidationTest {
     ReservationReader reservationReader;
 
     @InjectMocks
-    ReservationCommandServiceImpl reservationService;
+    ReservationQueryServiceImpl reservationService;
 
     private Reservation res(String start, String end, Long id) {
         Reservation r = Reservation.builder()

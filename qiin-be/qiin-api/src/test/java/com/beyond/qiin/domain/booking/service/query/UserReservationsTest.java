@@ -64,11 +64,7 @@ public class UserReservationsTest {
                 null, // actualStartAt
                 null, // actualEndAt
                 100L, // version
-                10L, // assetId
-                "Projector", // assetName
-                "Electronics", // categoryName
-                0, // assetType
-                1 // assetStatus
+                "Projector" // assetName
                 );
 
         RawUserReservationResponseDto raw2 = new RawUserReservationResponseDto(
@@ -80,11 +76,7 @@ public class UserReservationsTest {
                 null, // actualStartAt
                 null, // actualEndAt
                 101L, // version
-                20L, // assetId
-                "Laptop", // assetName
-                "Electronics", // categoryName
-                1, // assetType
-                1 // assetStatus
+                "Laptop" // assetName
                 );
 
         List<RawUserReservationResponseDto> rawList = List.of(raw1, raw2);

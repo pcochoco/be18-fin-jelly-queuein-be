@@ -123,14 +123,12 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
 
         // 예약 가능한지에 대해 포함해서 페이지 제공
         Page<GetAppliedReservationResponseDto> page = rawPage.map(raw -> {
-            boolean isAssetAvailable = assetQueryService.isAvailable(raw.getAssetId());
+            boolean isAssetAvailable = raw.isAssetAvailable();
 
             boolean isReservableTime = isReservationTimeAvailable(
                     raw.getReservationId(), raw.getAssetId(), raw.getStartAt(), raw.getEndAt());
 
-            boolean isReservable = isAssetAvailable && isReservableTime;
-
-            return GetAppliedReservationResponseDto.fromRaw(raw, isReservable);
+            return GetAppliedReservationResponseDto.fromRaw(raw, isReservableTime && isAssetAvailable);
         });
         return PageResponseDto.from(page);
     }
