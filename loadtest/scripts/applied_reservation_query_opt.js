@@ -32,11 +32,22 @@ const users = new SharedArray('users', function () {
     });
 });
 
+//1명 실행 용도
+// export const options = {
+//  scenarios: {
+//    applied_reservations_nplus1_load: {
+//      executor: 'shared-iterations',
+//      vus: 1,
+//      iterations: 1,
+//    },
+//  },
+// };
+
 export const options = {
   scenarios: {
     applied_reservations_nplus1_load: {
       executor: 'constant-vus',
-      vus: Number(__ENV.VUS || 30),
+      vus: Number(__ENV.VUS || 5),
       duration: __ENV.DURATION || '30s',
     },
   },
@@ -94,7 +105,7 @@ export default function () {
 }
 
 export function handleSummary(data) {
-  const out = __ENV.OUT || '../results/applied-reservations-nplus1-summary.json';
+  const out = __ENV.OUT || './results/applied-reservations-after-reservable-bulk-vu5-summary.json';
 
   //applied-reservations-after-asset-status-projection.json
   //applied-reservations-after-reservable-bulk.json
