@@ -9,6 +9,7 @@ import com.beyond.qiin.common.dto.PageResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetAppliedReservationSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.response.applied_reservation.GetAppliedReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawAppliedReservationResponseDto;
+import com.beyond.qiin.domain.booking.repository.ReservationSlotJpaRepository;
 import com.beyond.qiin.domain.booking.repository.querydsl.AppliedReservationsQueryRepository;
 import com.beyond.qiin.domain.booking.repository.querydsl.UserReservationsQueryRepository;
 import com.beyond.qiin.domain.booking.support.ReservationReader;
@@ -48,6 +49,9 @@ public class GetAppliedReservationsTest {
     @Mock
     private UserReservationsQueryRepository userReservationsQueryRepository;
 
+    @Mock
+    private ReservationSlotJpaRepository reservationSlotJpaRepository;
+
     @Test
     void getReservationApplies_returnsPagedDto() {
         Long userId = 1L;
@@ -68,7 +72,7 @@ public class GetAppliedReservationsTest {
                 1L,
                 "Alice",
                 "Bob",
-                1,
+                0,
                 true,
                 "Projector needed",
                 100L,
@@ -92,7 +96,11 @@ public class GetAppliedReservationsTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<RawAppliedReservationResponseDto> rawPage = new PageImpl<>(List.of(raw1, raw2), pageable, 2);
         when(appliedReservationsQueryRepository.search(any(), eq(pageable))).thenReturn(rawPage);
-        when(reservationReader.getActiveReservationsByAssetId(any())).thenReturn(List.of());
+        when(reservationSlotJpaRepository.findAllForReservability(
+                        eq(List.of(10L, 20L)),
+                        eq(Instant.parse("2025-12-04T10:00:00Z")),
+                        eq(Instant.parse("2025-12-04T15:00:00Z"))))
+                .thenReturn(List.of());
 
         // 실행
         PageResponseDto<GetAppliedReservationResponseDto> result =
