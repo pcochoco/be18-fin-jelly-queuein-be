@@ -22,7 +22,7 @@ public class GetAppliedReservationResponseDto {
     private final String applicantName;
 
     // 예약 가능 여부
-    private final boolean reservable; // jacksonized에서 파악용 필드
+    private final Boolean isAvailable;
 
     // 응답 시 필수 x
     // 승인자
@@ -39,7 +39,7 @@ public class GetAppliedReservationResponseDto {
     private final Long version;
 
     public static GetAppliedReservationResponseDto fromRaw(
-            final RawAppliedReservationResponseDto raw, final boolean isReservable) {
+            final RawAppliedReservationResponseDto raw, final boolean isAvailable) {
         return GetAppliedReservationResponseDto.builder()
                 .assetName(raw.getAssetName())
                 .reservationId(raw.getReservationId())
@@ -48,7 +48,7 @@ public class GetAppliedReservationResponseDto {
                 .reservationStatus(
                         ReservationStatus.from(raw.getReservationStatus()).name())
                 .isApproved(raw.getIsApproved())
-                .reservable(isReservable)
+                .isAvailable(isAvailable)
                 .version(raw.getVersion())
                 .reason(raw.getReason())
                 .build();

@@ -185,6 +185,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         }
 
         reservation.reject(respondent, confirmReservationRequestDto.getReason()); // status rejected, reason 추가
+        reservationSlotManager.deleteSlots(reservationId);
 
         reservationWriter.save(reservation);
 
@@ -241,6 +242,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         Reservation reservation = reservationReader.getReservationById(reservationId);
         //        validateReservationCanceling(reservation); // 30분 전인 경우 허용
         reservation.cancel();
+        reservationSlotManager.deleteSlots(reservationId);
 
         reservationWriter.save(reservation);
 
@@ -264,8 +266,13 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         }
 
         if (updateReservationRequestDto.getStartAt() != null && updateReservationRequestDto.getEndAt() != null) {
+            ReservationStatus statusBeforeChange = reservation.getStatus();
+            reservationSlotManager.deleteSlots(reservationId);
             reservation.changeSchedule(
                     updateReservationRequestDto.getStartAt(), updateReservationRequestDto.getEndAt());
+            if (statusBeforeChange == ReservationStatus.APPROVED) {
+                reservationSlotManager.createSlots(reservation, reservation.getAsset());
+            }
         }
 
         // 수정 시 참여자들을 무조건 받는 구조 : id 없는 경우 -> 빈 배열일 때도 이전 추가된 참여들을 위해 삭제해야함
@@ -303,13 +310,14 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         reservation.softDeleteAll(userId); // 예약, 참여자 둘다 soft delete 처리
 
         // reservation slot 삭제
-        reservationSlotJpaRepository.deleteByReservationId(reservationId);
+        reservationSlotManager.deleteSlots(reservationId);
 
         reservationWriter.save(reservation);
     }
 
     // 하드 딜리트
     public void hardDeleteReservation(final Long reservationId) {
+        reservationSlotManager.deleteSlots(reservationId);
         reservationWriter.hardDelete(reservationId);
     }
 

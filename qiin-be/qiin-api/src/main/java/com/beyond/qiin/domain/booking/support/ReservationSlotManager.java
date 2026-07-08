@@ -52,4 +52,14 @@ public class ReservationSlotManager {
             throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_DUPLICATED);
         }
     }
+
+    public void deleteSlots(final Long reservationId) {
+        reservationSlotJpaRepository.deleteByReservationId(reservationId);
+        reservationSlotJpaRepository.flush();
+    }
+
+    public void recreateSlots(final Reservation reservation, final Asset asset) {
+        deleteSlots(reservation.getId());
+        createSlots(reservation, asset);
+    }
 }

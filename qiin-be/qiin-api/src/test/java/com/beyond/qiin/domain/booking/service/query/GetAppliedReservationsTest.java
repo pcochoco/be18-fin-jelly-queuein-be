@@ -1,13 +1,15 @@
 package com.beyond.qiin.domain.booking.service.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.beyond.qiin.common.dto.PageResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetAppliedReservationSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.response.applied_reservation.GetAppliedReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawAppliedReservationResponseDto;
+import com.beyond.qiin.domain.booking.repository.ReservationSlotJpaRepository;
 import com.beyond.qiin.domain.booking.repository.querydsl.AppliedReservationsQueryRepository;
 import com.beyond.qiin.domain.booking.repository.querydsl.UserReservationsQueryRepository;
 import com.beyond.qiin.domain.booking.support.ReservationReader;
@@ -22,6 +24,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -45,12 +49,16 @@ public class GetAppliedReservationsTest {
     @Mock
     private UserReservationsQueryRepository userReservationsQueryRepository;
 
+    @Mock
+    private ReservationSlotJpaRepository reservationSlotJpaRepository;
+
     @Test
     void getReservationApplies_returnsPagedDto() {
         Long userId = 1L;
 
         GetAppliedReservationSearchCondition condition = new GetAppliedReservationSearchCondition();
-        condition.setDate(LocalDate.of(2025, 12, 4));
+        condition.setStartDate(LocalDate.of(2025, 12, 4));
+        condition.setEndDate(LocalDate.of(2025, 12, 4));
 
         // Mock user
         User user = User.builder().userName("Alice").build();
@@ -60,10 +68,11 @@ public class GetAppliedReservationsTest {
         RawAppliedReservationResponseDto raw1 = new RawAppliedReservationResponseDto(
                 10L,
                 "Projector",
+                0,
                 1L,
                 "Alice",
                 "Bob",
-                1,
+                0,
                 true,
                 "Projector needed",
                 100L,
@@ -73,6 +82,7 @@ public class GetAppliedReservationsTest {
         RawAppliedReservationResponseDto raw2 = new RawAppliedReservationResponseDto(
                 20L,
                 "Laptop",
+                1,
                 2L,
                 "Charlie",
                 "David",
@@ -83,13 +93,14 @@ public class GetAppliedReservationsTest {
                 Instant.parse("2025-12-04T13:00:00Z"),
                 Instant.parse("2025-12-04T15:00:00Z"));
 
-        List<RawAppliedReservationResponseDto> rawList = List.of(raw1, raw2);
-        when(appliedReservationsQueryRepository.search(condition)).thenReturn(rawList);
-
-        // Mock asset availability
-        when(assetQueryService.isAvailable(anyLong())).thenReturn(true);
-
         Pageable pageable = PageRequest.of(0, 10);
+        Page<RawAppliedReservationResponseDto> rawPage = new PageImpl<>(List.of(raw1, raw2), pageable, 2);
+        when(appliedReservationsQueryRepository.search(any(), eq(pageable))).thenReturn(rawPage);
+        when(reservationSlotJpaRepository.findAllForReservability(
+                        eq(List.of(10L, 20L)),
+                        eq(Instant.parse("2025-12-04T10:00:00Z")),
+                        eq(Instant.parse("2025-12-04T15:00:00Z"))))
+                .thenReturn(List.of());
 
         // 실행
         PageResponseDto<GetAppliedReservationResponseDto> result =
@@ -101,5 +112,7 @@ public class GetAppliedReservationsTest {
 
         assertEquals("Projector", result.getContent().get(0).getAssetName());
         assertEquals("Laptop", result.getContent().get(1).getAssetName());
+        assertEquals(true, result.getContent().get(0).getIsAvailable());
+        assertEquals(false, result.getContent().get(1).getIsAvailable());
     }
 }
