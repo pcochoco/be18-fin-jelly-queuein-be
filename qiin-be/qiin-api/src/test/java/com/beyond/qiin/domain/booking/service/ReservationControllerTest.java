@@ -531,7 +531,7 @@ public class ReservationControllerTest {
                 .respondentName("관리자")
                 .reservationStatus("PENDING")
                 .isApproved(false)
-                .isReservable(true)
+                .isAvailable(true)
                 .reason(null)
                 .version(1L)
                 .build();
@@ -557,6 +557,7 @@ public class ReservationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].reservationId").value(100L))
                 .andExpect(jsonPath("$.content[0].assetName").value("회의실 A"))
-                .andExpect(jsonPath("$.content[0].applicantName").value("홍길동"));
+                .andExpect(jsonPath("$.content[0].applicantName").value("홍길동"))
+                .andExpect(jsonPath("$.content[0].isAvailable").value(true));
     }
 }

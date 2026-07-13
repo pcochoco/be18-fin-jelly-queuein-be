@@ -1,6 +1,6 @@
 spring:
   cache:
-    type: redis #none
+    type: none #redis
 
   config:
     activate:

@@ -4,6 +4,7 @@ import com.beyond.qiin.common.dto.PageResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.request.criteria.AppliedReservationSearchCriteria;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetAppliedReservationSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetUserReservationSearchCondition;
+import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.ReservableAssetSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.response.ReservationDetailResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.applied_reservation.GetAppliedReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.asset_time.AssetTimeResponseDto;
@@ -14,6 +15,7 @@ import com.beyond.qiin.domain.booking.dto.reservation.response.month_reservation
 import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawAppliedReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawUserReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.reservable_asset.ReservableAssetResponseDto;
+import com.beyond.qiin.domain.booking.dto.reservation.response.slot.RawReservationSlotResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.user_reservation.GetUserReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.WeekReservationDailyResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.WeekReservationListResponseDto;
@@ -22,15 +24,19 @@ import com.beyond.qiin.domain.booking.entity.Reservation;
 import com.beyond.qiin.domain.booking.enums.ReservationStatus;
 import com.beyond.qiin.domain.booking.exception.ReservationErrorCode;
 import com.beyond.qiin.domain.booking.exception.ReservationException;
+import com.beyond.qiin.domain.booking.repository.ReservationSlotJpaRepository;
 import com.beyond.qiin.domain.booking.repository.querydsl.AppliedReservationsQueryRepository;
+import com.beyond.qiin.domain.booking.repository.querydsl.ReservationQueryRepository;
 import com.beyond.qiin.domain.booking.repository.querydsl.UserReservationsQueryRepository;
 import com.beyond.qiin.domain.booking.support.ReservationReader;
 import com.beyond.qiin.domain.booking.util.AvailableTimeSlotCalculator;
 import com.beyond.qiin.domain.booking.vo.DateRange;
 import com.beyond.qiin.domain.booking.vo.TimeSlot;
 import com.beyond.qiin.domain.iam.support.user.UserReader;
+import com.beyond.qiin.domain.inventory.dto.asset.request.search_condition.AssetSearchCondition;
 import com.beyond.qiin.domain.inventory.dto.asset.response.raw.RawDescendantAssetResponseDto;
 import com.beyond.qiin.domain.inventory.enums.AssetType;
+import com.beyond.qiin.domain.inventory.repository.querydsl.AssetQueryRepository;
 import com.beyond.qiin.domain.inventory.service.query.AssetQueryService;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -43,6 +49,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +64,9 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
     private final AssetQueryService assetQueryService;
     private final UserReservationsQueryRepository userReservationsQueryRepository;
     private final AppliedReservationsQueryRepository appliedReservationsQueryRepository;
+    private final AssetQueryRepository assetQueryRepository;
+    private final ReservationQueryRepository reservationQueryRepository;
+    private final ReservationSlotJpaRepository reservationSlotJpaRepository;
 
     // 예약 상세 조회 (api용)
     @Override
@@ -114,16 +124,16 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
         Page<RawAppliedReservationResponseDto> rawPage =
                 appliedReservationsQueryRepository.search(appliedReservationSearchCriteria, pageable);
 
+        Map<Long, List<RawReservationSlotResponseDto>> slotsByAssetId = getReservationSlotsInBulk(rawPage.getContent());
+
         // 예약 가능한지에 대해 포함해서 페이지 제공
         Page<GetAppliedReservationResponseDto> page = rawPage.map(raw -> {
-            boolean isAssetAvailable = assetQueryService.isAvailable(raw.getAssetId());
+            boolean isAssetAvailable = raw.isAssetAvailable();
 
-            boolean isReservableTime = isReservationTimeAvailable(
-                    raw.getReservationId(), raw.getAssetId(), raw.getStartAt(), raw.getEndAt());
+            boolean isReservableTime = raw.getReservationStatus() == ReservationStatus.PENDING.getCode()
+                    && isReservationTimeAvailable(raw.getAssetId(), raw.getStartAt(), raw.getEndAt(), slotsByAssetId);
 
-            boolean isReservable = isAssetAvailable && isReservableTime;
-
-            return GetAppliedReservationResponseDto.fromRaw(raw, isReservable);
+            return GetAppliedReservationResponseDto.fromRaw(raw, isReservableTime && isAssetAvailable);
         });
         return PageResponseDto.from(page);
     }
@@ -318,43 +328,47 @@ public class ReservationQueryServiceImpl implements ReservationQueryService {
         return !(coveredStart.equals(dayStart) && coveredEnd.equals(dayEnd));
     }
 
-    // api x 비즈니스 메서드
-    private void validateReservationAvailability(
-            final Long reservationId, final Long assetId, final Instant startAt, final Instant endAt) {
-        if (!isReservationTimeAvailable(reservationId, assetId, startAt, endAt))
-            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_DUPLICATED);
-    }
-
     // test 가능하도록 package private 허용
     // 자원에 대한 예약 가능의 유무 -  비즈니스 책임이므로 command service로
     boolean isReservationTimeAvailable(
-            final Long reservationId, final Long assetId, final Instant startAt, final Instant endAt) {
+            final Long assetId,
+            final Instant startAt,
+            final Instant endAt,
+            final Map<Long, List<RawReservationSlotResponseDto>> slotsByAssetId) {
 
-        List<Reservation> reservations = reservationReader.getActiveReservationsByAssetId(assetId);
+        List<RawReservationSlotResponseDto> assetSlots = slotsByAssetId.getOrDefault(assetId, List.of());
 
-        for (Reservation reservation : reservations) {
+        return assetSlots.stream()
+                .noneMatch(slot ->
+                        !slot.startAt().isBefore(startAt) && slot.startAt().isBefore(endAt));
+    }
 
-            if (reservationId != null) { // 생성시는 null
-                if (reservation.getId().equals(reservationId)) {
-                    continue;
-                }
-            }
+    private Map<Long, List<RawReservationSlotResponseDto>> getReservationSlotsInBulk(
+            final List<RawAppliedReservationResponseDto> reservations) {
 
-            Instant existingStart = reservation.getStartAt();
-            Instant existingEnd = reservation.getEndAt();
-
-            // 딱 맞닿는 경우는 허용
-            if (startAt.equals(existingEnd) || endAt.equals(existingStart)) {
-                continue;
-            }
-
-            // 겹침 체크
-            boolean overlaps = startAt.isBefore(existingEnd) && endAt.isAfter(existingStart);
-
-            if (overlaps) return false;
+        if (reservations.isEmpty()) {
+            return Map.of();
         }
 
-        return true;
+        List<Long> assetIds = reservations.stream()
+                .map(RawAppliedReservationResponseDto::getAssetId)
+                .distinct()
+                .toList();
+
+        Instant minStartAt = reservations.stream()
+                .map(RawAppliedReservationResponseDto::getStartAt)
+                .min(Instant::compareTo)
+                .orElseThrow();
+
+        Instant maxEndAt = reservations.stream()
+                .map(RawAppliedReservationResponseDto::getEndAt)
+                .max(Instant::compareTo)
+                .orElseThrow();
+
+        List<RawReservationSlotResponseDto> slots =
+                reservationSlotJpaRepository.findAllForReservability(assetIds, minStartAt, maxEndAt);
+
+        return slots.stream().collect(Collectors.groupingBy(RawReservationSlotResponseDto::assetId));
     }
 
     private DateRange resolveSearchDateRange(GetAppliedReservationSearchCondition condition) {
