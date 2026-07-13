@@ -1,12 +1,10 @@
 package com.beyond.qiin.domain.inventory.service.query;
 
 import com.beyond.qiin.common.dto.PageResponseDto;
+import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.ReservableAssetSearchCondition;
+import com.beyond.qiin.domain.booking.dto.reservation.response.reservable_asset.ReservableAssetResponseDto;
 import com.beyond.qiin.domain.inventory.dto.asset.request.search_condition.AssetSearchCondition;
-import com.beyond.qiin.domain.inventory.dto.asset.response.AssetDetailResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.DescendantAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.OneDepthAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.RootAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.TreeAssetResponseDto;
+import com.beyond.qiin.domain.inventory.dto.asset.response.*;
 import com.beyond.qiin.domain.inventory.entity.Asset;
 import com.beyond.qiin.domain.inventory.enums.AssetStatus;
 import java.util.List;
@@ -47,6 +45,10 @@ public interface AssetQueryService {
 
     // 사용 가능한 자원 목록 조회
     List<Asset> findAvailableAssets(final Long categoryId, final String keyword);
+
+    // 예약 가능 시간대 있는자원 목록 조회
+    PageResponseDto<ReservableAssetResponseDto> getReservableAssets(
+            final Long userId, final ReservableAssetSearchCondition condition, final Pageable pageable);
 
     // 이름으로 자원 id 찾기
     Long findIdByName(String name);

@@ -6,13 +6,11 @@ import com.beyond.qiin.domain.booking.dto.reservation.request.CreateReservationR
 import com.beyond.qiin.domain.booking.dto.reservation.request.UpdateReservationRequestDto;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetAppliedReservationSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.GetUserReservationSearchCondition;
-import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.ReservableAssetSearchCondition;
 import com.beyond.qiin.domain.booking.dto.reservation.response.ReservationDetailResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.ReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.applied_reservation.GetAppliedReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.asset_time.AssetTimeResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.month_reservation.MonthReservationListResponseDto;
-import com.beyond.qiin.domain.booking.dto.reservation.response.reservable_asset.ReservableAssetResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.user_reservation.GetUserReservationResponseDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.week_reservation.WeekReservationListResponseDto;
 import com.beyond.qiin.domain.booking.service.command.ReservationCommandService;
@@ -218,21 +216,6 @@ public class ReservationController {
         return ResponseEntity.ok(reservations);
     }
 
-    // 예약 가능 자원 목록 조회
-    @PreAuthorize("hasAnyAuthority('MASTER', 'ADMIN','GENERAL', 'MANAGER')")
-    @GetMapping("/reservable-assets")
-    public ResponseEntity<PageResponseDto<ReservableAssetResponseDto>> getReservableAssets(
-            @AccessToken final String accessToken,
-            @Valid @ModelAttribute ReservableAssetSearchCondition condition,
-            Pageable pageable) {
-
-        final Long userId = jwtTokenProvider.getUserId(accessToken);
-
-        PageResponseDto<ReservableAssetResponseDto> page =
-                reservationQueryService.getReservableAssets(userId, condition, pageable);
-        return ResponseEntity.ok(page);
-    }
-
     // page x 조회
 
     // 월별 일정 조회
@@ -260,7 +243,7 @@ public class ReservationController {
                 reservationQueryService.getWeeklyReservations(userId, date);
         return ResponseEntity.ok(weekReservationListResponseDto);
     }
-    //
+
     // 예약 가능 시간대 조회
     @PreAuthorize("hasAnyAuthority('MASTER', 'ADMIN','GENERAL', 'MANAGER')")
     @GetMapping("/{assetId}/available-times")
