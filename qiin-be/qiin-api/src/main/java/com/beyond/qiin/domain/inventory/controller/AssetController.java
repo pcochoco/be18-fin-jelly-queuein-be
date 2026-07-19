@@ -1,17 +1,13 @@
 package com.beyond.qiin.domain.inventory.controller;
 
 import com.beyond.qiin.common.dto.PageResponseDto;
+import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.ReservableAssetSearchCondition;
+import com.beyond.qiin.domain.booking.dto.reservation.response.reservable_asset.ReservableAssetResponseDto;
 import com.beyond.qiin.domain.inventory.dto.asset.request.CreateAssetRequestDto;
 import com.beyond.qiin.domain.inventory.dto.asset.request.MoveAssetRequestDto;
 import com.beyond.qiin.domain.inventory.dto.asset.request.UpdateAssetRequestDto;
 import com.beyond.qiin.domain.inventory.dto.asset.request.search_condition.AssetSearchCondition;
-import com.beyond.qiin.domain.inventory.dto.asset.response.AssetDetailResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.CreateAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.DescendantAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.OneDepthAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.RootAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.TreeAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.UpdateAssetResponseDto;
+import com.beyond.qiin.domain.inventory.dto.asset.response.*;
 import com.beyond.qiin.domain.inventory.service.command.AssetCommandService;
 import com.beyond.qiin.domain.inventory.service.query.AssetQueryService;
 import com.beyond.qiin.security.jwt.JwtTokenProvider;
@@ -23,15 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/assets")
@@ -118,6 +106,22 @@ public class AssetController {
                 assetQueryService.getDescendantAssetList(condition, pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(descendantAssetList);
+    }
+
+    // 실제 예약 시간 점유되지 않은 자원 조회
+    // 예약 가능 자원 목록 조회
+    @PreAuthorize("hasAnyAuthority('MASTER', 'ADMIN','GENERAL', 'MANAGER')")
+    @GetMapping("/reservable-assets")
+    public ResponseEntity<PageResponseDto<ReservableAssetResponseDto>> getReservableAssets(
+            @AccessToken final String accessToken,
+            @Valid @ModelAttribute ReservableAssetSearchCondition condition,
+            Pageable pageable) {
+
+        final Long userId = jwtTokenProvider.getUserId(accessToken);
+
+        PageResponseDto<ReservableAssetResponseDto> page =
+                assetQueryService.getReservableAssets(userId, condition, pageable);
+        return ResponseEntity.ok(page);
     }
 
     // 자원 계층 조회

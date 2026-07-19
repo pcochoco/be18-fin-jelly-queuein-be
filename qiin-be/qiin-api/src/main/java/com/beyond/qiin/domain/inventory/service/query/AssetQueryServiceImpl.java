@@ -1,12 +1,11 @@
 package com.beyond.qiin.domain.inventory.service.query;
 
 import com.beyond.qiin.common.dto.PageResponseDto;
+import com.beyond.qiin.domain.booking.dto.reservation.request.search_condition.ReservableAssetSearchCondition;
+import com.beyond.qiin.domain.booking.dto.reservation.response.reservable_asset.ReservableAssetResponseDto;
+import com.beyond.qiin.domain.iam.support.user.UserReader;
 import com.beyond.qiin.domain.inventory.dto.asset.request.search_condition.AssetSearchCondition;
-import com.beyond.qiin.domain.inventory.dto.asset.response.AssetDetailResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.DescendantAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.OneDepthAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.RootAssetResponseDto;
-import com.beyond.qiin.domain.inventory.dto.asset.response.TreeAssetResponseDto;
+import com.beyond.qiin.domain.inventory.dto.asset.response.*;
 import com.beyond.qiin.domain.inventory.dto.asset.response.raw.RawAssetDetailResponseDto;
 import com.beyond.qiin.domain.inventory.dto.asset.response.raw.RawDescendantAssetResponseDto;
 import com.beyond.qiin.domain.inventory.entity.Asset;
@@ -16,14 +15,10 @@ import com.beyond.qiin.domain.inventory.exception.AssetException;
 import com.beyond.qiin.domain.inventory.repository.AssetJpaRepository;
 import com.beyond.qiin.domain.inventory.repository.querydsl.AssetClosureQueryRepository;
 import com.beyond.qiin.domain.inventory.repository.querydsl.AssetQueryRepository;
+import com.beyond.qiin.domain.inventory.repository.querydsl.ReservableAssetQueryRepository;
 import com.beyond.qiin.infra.redis.inventory.AssetDetailReadModel;
 import com.beyond.qiin.infra.redis.inventory.AssetDetailRedisAdapter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -40,6 +35,10 @@ public class AssetQueryServiceImpl implements AssetQueryService {
     private final AssetClosureQueryRepository assetClosureQueryRepository;
 
     private final AssetJpaRepository assetJpaRepository;
+
+    private final ReservableAssetQueryRepository reservableAssetQueryRepository;
+
+    private final UserReader userReader;
 
     // 레디스 용
     private final AssetDetailRedisAdapter assetDetailRedisAdapter;
@@ -228,6 +227,19 @@ public class AssetQueryServiceImpl implements AssetQueryService {
             return false;
         }
         return true;
+    }
+
+    // 예약 가능 시간대 있는 자원 목록의 조회
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<ReservableAssetResponseDto> getReservableAssets(
+            final Long userId, final ReservableAssetSearchCondition condition, final Pageable pageable) {
+
+        userReader.findById(userId);
+
+        ReservableAssetSearchCriteria criteria = ReservableAssetSearchCriteria.from(condition);
+
+        return PageResponseDto.from(reservableAssetQueryRepository.getReservableAssets(criteria, pageable));
     }
 
     // 챗봇 용으로 추가하는 메소드들
