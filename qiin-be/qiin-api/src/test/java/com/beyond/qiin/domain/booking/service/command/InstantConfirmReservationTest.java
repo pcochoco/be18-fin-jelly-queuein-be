@@ -129,6 +129,7 @@ public class InstantConfirmReservationTest {
         verify(assetCommandService).isAvailable(assetId);
         verify(reservationWriter).save(any());
         verify(attendantWriter).saveAll(any());
+        verify(reservationSlotManager).createSlots(any(), any());
         verify(reservationEventPublisher).publishEventCreated(any(), any());
     }
 }

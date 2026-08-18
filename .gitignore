@@ -80,3 +80,73 @@ gradle.properties
 
 ### user token csv ###
 /qiin-be/output
+
+
+# ==============================
+# Terraform
+# ==============================
+
+# Terraform working directory
+**/.terraform/*
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Terraform variable files
+# 민감 정보가 들어갈 수 있으므로 기본적으로 제외
+*.tfvars
+*.tfvars.json
+
+# 공개 가능한 예시 변수 파일은 포함
+!*.tfvars.example
+!*.tfvars.json.example
+
+# Terraform plan files
+*.tfplan
+*.plan
+tfplan
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Terraform lock metadata created during state operations
+.terraform.tfstate.lock.info
+
+# Local backend/state backup files
+*.tfstate.backup
+
+# Sensitive or local-only files
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Environment variable files
+.env
+.env.*
+!.env.example
+
+# Local secret files
+secrets.tf
+secrets.auto.tfvars
+*.secret.tfvars
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

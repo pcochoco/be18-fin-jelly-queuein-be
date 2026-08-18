@@ -81,7 +81,7 @@ public class ReservableAssetsTest {
         when(reservationQueryRepository.findByAssetIdsAndTimeRange(any(), any(), any()))
                 .thenReturn(Map.of());
         PageResponseDto<ReservableAssetResponseDto> result =
-                reservationQueryService.getReservableAssets(userId, condition, pageable);
+                assetQueryService.getReservableAssets(userId, condition, pageable);
 
         assertEquals(2, result.getContent().size());
         assertEquals(2, result.getTotalElements());

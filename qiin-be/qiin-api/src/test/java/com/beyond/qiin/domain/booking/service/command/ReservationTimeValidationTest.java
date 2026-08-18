@@ -2,7 +2,7 @@ package com.beyond.qiin.domain.booking.service.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.beyond.qiin.domain.booking.dto.reservation.response.slot.RawReservationSlotResponseDto;
+import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawReservationSlotResponseDto;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;

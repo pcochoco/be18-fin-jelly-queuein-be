@@ -1,45 +1,40 @@
 package com.beyond.qiin.domain.booking.util;
 
-import com.beyond.qiin.domain.booking.entity.Reservation;
+import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawReservationSlotResponseDto;
 import com.beyond.qiin.domain.booking.vo.TimeSlot;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class AvailableTimeSlotCalculator {
 
-    public static boolean isReservable(List<Reservation> reservations, LocalDate date, ZoneId zoneId) {
+    public static boolean isReservable(
+            final List<RawReservationSlotResponseDto> occupiedSlots, final LocalDate date, final ZoneId zoneId) {
 
-        return !calculateAvailableSlots(reservations, date, zoneId).isEmpty();
+        return calculateAvailableSlots(occupiedSlots, date, zoneId).stream().anyMatch(TimeSlot::isAvailable);
     }
 
     public static List<TimeSlot> calculateAvailableSlots(
-            List<Reservation> reservations, LocalDate date, ZoneId zoneId) {
+            final List<RawReservationSlotResponseDto> occupiedSlots, final LocalDate date, final ZoneId zoneId) {
 
-        List<TimeSlot> result = new ArrayList<>();
+        Set<Instant> occupiedStarts = occupiedSlots.stream()
+                .map(RawReservationSlotResponseDto::startAt)
+                .collect(Collectors.toSet());
 
-        for (int h = 0; h < 24; h++) {
+        return IntStream.range(0, 24)
+                .mapToObj(hour -> {
+                    Instant startAt = date.atTime(hour, 0).atZone(zoneId).toInstant();
 
-            Instant blockStart = date.atTime(h, 0).atZone(zoneId).toInstant();
-            Instant blockEnd = (h == 23)
-                    ? date.plusDays(1).atTime(0, 0).atZone(zoneId).toInstant()
-                    : date.atTime(h + 1, 0).atZone(zoneId).toInstant();
+                    Instant endAt =
+                            date.atTime(hour, 0).plusHours(1).atZone(zoneId).toInstant();
 
-            boolean available = true;
-
-            for (Reservation r : reservations) {
-                if (r.getStartAt().isBefore(blockEnd) && r.getEndAt().isAfter(blockStart)) {
-
-                    available = false;
-                    break;
-                }
-            }
-
-            result.add(TimeSlot.create(blockStart, blockEnd, available));
-        }
-
-        return result;
+                    // 응답용 vo : timeslot
+                    return TimeSlot.create(startAt, endAt, !occupiedStarts.contains(startAt));
+                })
+                .toList();
     }
 }

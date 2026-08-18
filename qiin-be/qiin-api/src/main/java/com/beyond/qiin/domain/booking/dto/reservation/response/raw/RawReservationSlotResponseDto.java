@@ -1,4 +1,4 @@
-package com.beyond.qiin.domain.booking.dto.reservation.response.slot;
+package com.beyond.qiin.domain.booking.dto.reservation.response.raw;
 
 import java.time.Instant;
 
