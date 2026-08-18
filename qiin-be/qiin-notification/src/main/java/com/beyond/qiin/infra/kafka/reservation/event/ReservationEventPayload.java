@@ -6,9 +6,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReservationEventPayload {
     private String eventType; // 모든 서비스에서 enum을 맞추는 것보다 string으로 주는게 유연

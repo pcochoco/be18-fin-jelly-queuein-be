@@ -2,6 +2,7 @@ package com.beyond.qiin.infra.kafka.reservation.consumer;
 
 import com.beyond.qiin.domain.alarm.service.NotificationCommandService;
 import com.beyond.qiin.infra.kafka.reservation.event.ReservationEventPayload;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +23,9 @@ public class ReservationConsumer {
     private final ObjectMapper objectMapper; // kafka(string) -> notification service(자바 객체)로 역직렬화용
 
     @KafkaListener(topics = "#{@kafkaTopicProperties.get('reservation-event')}", groupId = "reservation-group")
-    public void onEvent(String message) {
-        try {
-            ReservationEventPayload payload = objectMapper.readValue(message, ReservationEventPayload.class);
-            log.info("received reservation event payload: {}", payload);
-            notificationService.notifyEvent(payload);
-
-        } catch (Exception e) {
-            log.error("Failed to handle reservation event", e);
-        }
+    public void onEvent(String message) throws JsonProcessingException {
+        ReservationEventPayload payload = objectMapper.readValue(message, ReservationEventPayload.class);
+        log.info("received reservation event payload: {}", payload);
+        notificationService.notifyEvent(payload);
     }
 }

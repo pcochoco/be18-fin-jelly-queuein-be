@@ -21,6 +21,11 @@ spring:
     topic:
       topics:
         reservation-event: reservation-event-topic
+        reservation-event-dlt: reservation-event-topic.DLT
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
     consumer:
       auto-offset-reset: earliest
