@@ -52,8 +52,8 @@ class NotificationCommandServiceIdempotencyTest {
 
         notificationCommandService.notifyEvent(payload);
 
-        //2번째 notifyEvent 호출
-        //내부에서 sendNotification 시 db에서 동일한 notification 있는 경우 skip하는 구조
+        // 2번째 notifyEvent 호출
+        // 내부에서 sendNotification 시 db에서 동일한 notification 있는 경우 skip하는 구조
         assertThatCode(() -> notificationCommandService.notifyEvent(payload)).doesNotThrowAnyException();
         assertThat(notificationJpaRepository.count()).isEqualTo(1);
         verify(sseService, times(1)).send(org.mockito.ArgumentMatchers.eq(3L), org.mockito.ArgumentMatchers.any());

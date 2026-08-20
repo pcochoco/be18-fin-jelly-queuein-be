@@ -13,7 +13,7 @@ public class KafkaDltMetrics {
     private static final String TOPIC_TAG = "topic";
     private static final String CONSUMER_TAG = "consumer";
 
-    //metric registry : metric 관리 객체 (micrometer : metric 수집용 계층)
+    // metric registry : metric 관리 객체 (micrometer : metric 수집용 계층)
     private final MeterRegistry meterRegistry;
 
     public void incrementPublished(String topic, String consumer) {

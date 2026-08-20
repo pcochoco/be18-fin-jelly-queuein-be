@@ -18,11 +18,10 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 
 class KafkaDltMetricsTest {
 
-
-    //application이 prometheus가 읽을 수 있는 형태로 지표 노출하는지 확인용
+    // application이 prometheus가 읽을 수 있는 형태로 지표 노출하는지 확인용
     @Test
     void dltPublishedCounterIsExposedWithPrometheusName() {
-        //meter registry : micrometer의 지표 수집 및 관리 저장소 (prometheus 형식으로 내보냄)
+        // meter registry : micrometer의 지표 수집 및 관리 저장소 (prometheus 형식으로 내보냄)
         PrometheusMeterRegistry meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         KafkaDltMetrics kafkaDltMetrics = new KafkaDltMetrics(meterRegistry);
 
@@ -48,8 +47,7 @@ class KafkaDltMetricsTest {
 
         DeadLetterPublishingRecoverer recoverer =
                 new KafkaConsumerErrorHandlerConfig().deadLetterPublishingRecoverer(kafkaTemplate, kafkaDltMetrics);
-        //DI : new KafkaConsumerErrorHandlerConfig(), 만들어진 빈의 주입 (Configuration, Bean으로 선언 - Bean 메서드의 반환값)
-
+        // DI : new KafkaConsumerErrorHandlerConfig(), 만들어진 빈의 주입 (Configuration, Bean으로 선언 - Bean 메서드의 반환값)
 
         recoverer.setVerifyPartition(false);
 

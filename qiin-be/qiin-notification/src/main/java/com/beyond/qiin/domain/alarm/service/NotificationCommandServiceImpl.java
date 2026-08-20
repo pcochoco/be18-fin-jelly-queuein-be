@@ -113,8 +113,8 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     }
 
     private void sendNotification(final NotificationContext ctx) {
-        //offset을 중복해 수신할 경우 동일한 notification 을 전송하지 않도록 하기 위해 skip
-        //unique 제약조건에 의해 예외 발생 및 dlt로 전달될 수 있기 때문
+        // offset을 중복해 수신할 경우 동일한 notification 을 전송하지 않도록 하기 위해 skip
+        // unique 제약조건에 의해 예외 발생 및 dlt로 전달될 수 있기 때문
         if (notificationJpaRepository.existsByEventOutboxIdAndReceiverId(ctx.getOutboxId(), ctx.getReceiverId())) {
             return;
         }
@@ -129,14 +129,8 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
 
         String message = ctx.getType().formatMessage(ctx.getStartAt(), ctx.getEndAt());
 
-        Notification notification =
-                Notification.create(
-                        ctx.getOutboxId(),
-                        ctx.getReceiverId(),
-                        ctx.getReservationId(),
-                        ctx.getType(),
-                        message,
-                        ctx.getJson());
+        Notification notification = Notification.create(
+                ctx.getOutboxId(), ctx.getReceiverId(), ctx.getReservationId(), ctx.getType(), message, ctx.getJson());
 
         return notificationJpaRepository.save(notification);
     }

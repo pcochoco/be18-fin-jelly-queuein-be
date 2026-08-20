@@ -33,9 +33,9 @@ public class KafkaConsumerErrorHandlerConfig {
 
         DefaultErrorHandler errorHandler =
                 new DefaultErrorHandler(recoverer, new FixedBackOff(RETRY_INTERVAL_MS, RETRY_COUNT));
-        errorHandler.addNotRetryableExceptions(JsonProcessingException.class); //json processing exception인 경우 재시도 x
+        errorHandler.addNotRetryableExceptions(JsonProcessingException.class); // json processing exception인 경우 재시도 x
 
-        //실패가 발생했을 때 그 실패 이벤트를 통지받는 콜백을 등록하는 것 -> 로그 출력
+        // 실패가 발생했을 때 그 실패 이벤트를 통지받는 콜백을 등록하는 것 -> 로그 출력
         errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> log.warn(
                 "Kafka consumer processing failed: topic={}, partition={}, offset={}, deliveryAttempt={}, exception={}",
                 record.topic(),
@@ -47,7 +47,7 @@ public class KafkaConsumerErrorHandlerConfig {
         return errorHandler;
     }
 
-    //package private
+    // package private
     DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(
             KafkaTemplate<Object, Object> kafkaTemplate, KafkaDltMetrics kafkaDltMetrics) {
         DeadLetterPublishingRecoverer recoverer =
@@ -60,7 +60,7 @@ public class KafkaConsumerErrorHandlerConfig {
                             record.offset(),
                             dlt.topic(),
                             dlt.partition(),
-                            ex.getClass().getName(), //ex : 발생한 예외의 정확한 클래스 이름
+                            ex.getClass().getName(), // ex : 발생한 예외의 정확한 클래스 이름
                             ex);
                     return dlt;
                 }) {
@@ -70,10 +70,10 @@ public class KafkaConsumerErrorHandlerConfig {
                             ProducerRecord<Object, Object> outRecord,
                             CompletableFuture<SendResult<Object, Object>> sendResult,
                             ConsumerRecord<?, ?> inRecord) {
-                        //dlt로 전달을 대기, 실패 시 예외
+                        // dlt로 전달을 대기, 실패 시 예외
                         super.verifySendResult(kafkaOperations, outRecord, sendResult, inRecord);
 
-                        //dlt 전달 성공 시 counter +1
+                        // dlt 전달 성공 시 counter +1
                         kafkaDltMetrics.incrementPublished(outRecord.topic(), RESERVATION_CONSUMER_TAG);
                     }
                 };
