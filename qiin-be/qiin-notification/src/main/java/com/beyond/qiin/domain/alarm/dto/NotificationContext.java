@@ -1,12 +1,14 @@
 package com.beyond.qiin.domain.alarm.dto;
 
 import com.beyond.qiin.domain.alarm.enums.NotificationType;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
 public class NotificationContext {
+    private UUID outboxId;
     private Long receiverId;
     private Long reservationId;
     private NotificationType type;

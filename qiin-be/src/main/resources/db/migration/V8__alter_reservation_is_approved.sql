@@ -1,2 +1,0 @@
-ALTER TABLE reservation
-    MODIFY COLUMN is_approved BOOLEAN NULL DEFAULT NULL;

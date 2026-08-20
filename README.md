@@ -16,6 +16,7 @@
 10. [API 명세서](#api)
 11. [통합테스트 결과서](#integration-test)
 12. [CI/CD 계획서](#cicd)
+13. [운영 문서](#operations)
 
 <br>
 
@@ -660,6 +661,12 @@ SettlementController 단위 테스트
 ## <a id="cicd"></a>12. CICD 계획서
 
 [CICD 계획서](https://nice-surprise-7e8.notion.site/CI-CD-2c50b5bf3ee080b082ccfbc4bbf10f36)
+
+<br>
+
+## <a id="operations"></a>13. 운영 문서
+
+[운영 모니터링 문서](./docs/operations.md)
 
 
 

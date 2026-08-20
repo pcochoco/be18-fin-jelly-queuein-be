@@ -2,6 +2,7 @@ package com.beyond.qiin.infra.kafka.reservation.event;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReservationEventPayload {
+    private UUID outboxId;
     private String eventType; // 모든 서비스에서 enum을 맞추는 것보다 string으로 주는게 유연
     private Long reservationId;
     private Long assetId;

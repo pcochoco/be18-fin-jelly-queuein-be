@@ -30,6 +30,8 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public final DateTimePath<java.time.Instant> deliveredAt = createDateTime("deliveredAt", java.time.Instant.class);
 
+    public final ComparablePath<java.util.UUID> eventOutboxId = createComparable("eventOutboxId", java.util.UUID.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final BooleanPath isRead = createBoolean("isRead");
