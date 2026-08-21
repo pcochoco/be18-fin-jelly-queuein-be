@@ -138,7 +138,7 @@
      <a href="https://www.figma.com/design/xXNsXQ9pTSdpUywONBOBTr/QueueIn?node-id=28-1861&p=f&t=ikXIls49kJ8eajIo-0">시스템 아키텍처</a>
     </div>
     <div markdown="1">
-      <img width="1581" height="795" alt="Frame 12" src="https://github.com/user-attachments/assets/66b17403-a2c3-43b7-b664-a2a26487ae2a" />
+      <img width="841" height="462" alt="image" src="https://github.com/user-attachments/assets/dc7010a4-9278-405a-8242-2be625996764" />
     </div>
   </details>
   <br>
@@ -161,7 +161,7 @@
   <details>
     <summary>세부사항</summary>
     <div markdown="1">
-      <a href="https://www.erdcloud.com/d/fFbaSvk2sHJQgE6RS">ERD Cloud</a>
+      <a href="https://www.erdcloud.com/d/EH9Lv2d6RmRd3kKAg">ERD Cloud</a>
     </div>
     <div markdown="1">
         <img width="1077" height="817" alt="KakaoTalk_20251114_170311228" src="https://github.com/user-attachments/assets/4b6862ac-1109-47e6-b0e4-ebf882e34457" />
