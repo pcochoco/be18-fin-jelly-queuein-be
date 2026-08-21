@@ -1,0 +1,66 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: kafka-dlt
+    folder: Kafka
+    interval: 30s
+    rules:
+      - uid: kafka_dlt_message_detected
+        title: Kafka DLT Message Detected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: increase(kafka_dlt_published_total{application="qiin-notification", topic="reservation-event-topic.DLT"}[5m])
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 0s
+        labels:
+          component: kafka
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: Kafka DLT 발생
+          description: 최근 5분 동안 새롭게 DLT로 전송된 메시지가 1건 이상 존재합니다.
+        isPaused: false

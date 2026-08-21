@@ -40,8 +40,16 @@ spring:
       auto-startup: false
     topic:
       topics:
-        reservation-created: reservation-created-topic
-        reservation-updated: reservation-updated-topic
+        reservation-event: reservation-event-topic
+        reservation-event-dlt: reservation-event-topic.DLT
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      auto-offset-reset: earliest
+      group-id: reservation-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
   data:
     redis:

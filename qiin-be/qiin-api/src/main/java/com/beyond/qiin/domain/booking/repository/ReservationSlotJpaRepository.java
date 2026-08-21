@@ -1,6 +1,6 @@
 package com.beyond.qiin.domain.booking.repository;
 
-import com.beyond.qiin.domain.booking.dto.reservation.response.slot.RawReservationSlotResponseDto;
+import com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawReservationSlotResponseDto;
 import com.beyond.qiin.domain.booking.entity.ReservationSlot;
 import java.time.Instant;
 import java.util.List;
@@ -14,7 +14,7 @@ public interface ReservationSlotJpaRepository extends JpaRepository<ReservationS
     // all slots that startAt, endAt
     @Query(
             """
-            SELECT new com.beyond.qiin.domain.booking.dto.reservation.response.slot.RawReservationSlotResponseDto(
+            SELECT new com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawReservationSlotResponseDto(
                 rs.reservation.id,
                 rs.asset.id,
                 rs.startAt
@@ -26,4 +26,20 @@ public interface ReservationSlotJpaRepository extends JpaRepository<ReservationS
             """)
     List<RawReservationSlotResponseDto> findAllForReservability(
             @Param("assetIds") List<Long> assetIds, @Param("startAt") Instant startAt, @Param("endAt") Instant endAt);
+
+    @Query(
+            """
+    SELECT new com.beyond.qiin.domain.booking.dto.reservation.response.raw.RawReservationSlotResponseDto(
+        rs.reservation.id,
+        rs.asset.id,
+        rs.startAt
+    )
+    FROM ReservationSlot rs
+    WHERE rs.asset.id = :assetId
+      AND rs.startAt >= :startAt
+      AND rs.startAt < :endAt
+    ORDER BY rs.startAt
+    """)
+    List<RawReservationSlotResponseDto> findAllByAssetAndDate(
+            @Param("assetId") Long assetId, @Param("startAt") Instant startAt, @Param("endAt") Instant endAt);
 }

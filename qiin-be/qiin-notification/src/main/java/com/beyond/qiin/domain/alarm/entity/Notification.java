@@ -11,20 +11,30 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "notification")
+@Table(
+        name = "notification",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_notification_receiver_outbox",
+                    columnNames = {"receiver_id", "event_outbox_id"})
+        })
 @SQLRestriction("deleted_at is null")
 public class Notification {
 
@@ -35,6 +45,10 @@ public class Notification {
 
     @Column(name = "receiver_id", nullable = false)
     private Long receiverId;
+
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "event_outbox_id", columnDefinition = "BINARY(16)", nullable = false)
+    private UUID eventOutboxId;
 
     @Column(name = "aggregate_id", nullable = false)
     private Long aggregateId;
@@ -88,8 +102,14 @@ public class Notification {
     }
 
     public static Notification create(
-            Long userId, Long aggregateId, NotificationType type, String message, String payloadJson) {
+            UUID eventOutboxId,
+            Long userId,
+            Long aggregateId,
+            NotificationType type,
+            String message,
+            String payloadJson) {
         return Notification.builder()
+                .eventOutboxId(eventOutboxId)
                 .receiverId(userId)
                 .aggregateId(aggregateId)
                 .type(type.getCode())

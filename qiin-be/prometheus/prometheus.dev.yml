@@ -8,7 +8,7 @@ scrape_configs:
   - job_name: 'spring-app'
     metrics_path: '/actuator/prometheus' #앱 안으로 접근해야하는 경로
     static_configs:
-      - targets: ['qiin-app:8080'] #데이터를 가져올 목적지 (컨테이너 이름)
+      - targets: ['qiin-api:8080', 'qiin-notification:8080'] #데이터를 가져올 목적지 (컨테이너 이름)
 
   # maria db
   - job_name: 'mariadb'

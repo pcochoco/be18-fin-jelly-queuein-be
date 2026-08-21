@@ -4,15 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 
+import com.beyond.qiin.domain.accounting.service.command.UsageHistoryCommandService;
 import com.beyond.qiin.domain.booking.dto.reservation.request.ConfirmReservationRequestDto;
 import com.beyond.qiin.domain.booking.dto.reservation.response.ReservationResponseDto;
 import com.beyond.qiin.domain.booking.entity.Reservation;
 import com.beyond.qiin.domain.booking.enums.ReservationStatus;
 import com.beyond.qiin.domain.booking.event.ReservationEventPublisher;
 import com.beyond.qiin.domain.booking.repository.AttendantJpaRepository;
+import com.beyond.qiin.domain.booking.repository.ReservationSlotJpaRepository;
 import com.beyond.qiin.domain.booking.support.AttendantWriter;
 import com.beyond.qiin.domain.booking.support.ReservationReader;
+import com.beyond.qiin.domain.booking.support.ReservationSlotManager;
 import com.beyond.qiin.domain.booking.support.ReservationWriter;
 import com.beyond.qiin.domain.iam.entity.User;
 import com.beyond.qiin.domain.iam.support.user.UserReader;
@@ -55,6 +59,15 @@ public class ApproveReservationTest {
     @Mock
     private AttendantJpaRepository attendantJpaRepository;
 
+    @Mock
+    private UsageHistoryCommandService usageHistoryCommandService;
+
+    @Mock
+    private ReservationSlotManager reservationSlotManager;
+
+    @Mock
+    private ReservationSlotJpaRepository reservationSlotJpaRepository;
+
     @Test
     void approveReservation_success() {
         Long userId = 1L;
@@ -81,10 +94,12 @@ public class ApproveReservationTest {
 
         Mockito.when(userReader.findById(userId)).thenReturn(user);
         Mockito.when(reservationReader.getReservationById(reservationId)).thenReturn(reservation);
+        Mockito.when(assetCommandService.getAssetById(asset.getId())).thenReturn(asset);
 
         ReservationResponseDto response = reservationCommandService.approveReservation(userId, reservationId, dto);
 
-        Mockito.verify(reservation).approve(user, "승인 이유", Instant.now());
+        Mockito.verify(reservation).approve(eq(user), eq("승인 이유"), any(Instant.class));
+        Mockito.verify(reservationSlotManager).createSlots(reservation, asset);
         Mockito.verify(reservationWriter).save(reservation);
         Mockito.verify(reservationEventPublisher).publishEventCreated(any(Reservation.class), anyList());
 

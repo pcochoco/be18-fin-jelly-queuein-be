@@ -1,0 +1,10 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: slack-kafka-alerts
+    receivers:
+      - uid: slack_kafka_alerts
+        type: slack
+        settings:
+          url: $SLACK_WEBHOOK_URL

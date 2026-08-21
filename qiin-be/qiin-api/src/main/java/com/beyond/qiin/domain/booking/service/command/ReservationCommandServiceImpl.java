@@ -53,7 +53,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
     // 승인 예약
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "appliedReservations", key = "@appliedReservationCachePolicy.defaultKey()")
+    @CacheEvict(cacheNames = "appliedReservations", allEntries = true)
     public ReservationResponseDto applyReservation(
             final Long userId, final Long assetId, final CreateReservationRequestDto createReservationRequestDto) {
 
@@ -130,8 +130,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         return ReservationResponseDto.fromEntity(reservation);
     }
 
-    // key 의 appliedReservations prefix 바탕으로 해당 시 삭제 및 default key를 통해 생성
-    @CacheEvict(cacheNames = "appliedReservations", key = "@appliedReservationCachePolicy.defaultKey()")
+    @CacheEvict(cacheNames = "appliedReservations", allEntries = true)
     @Override
     @Transactional
     public ReservationResponseDto approveReservation(
@@ -167,7 +166,7 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         return ReservationResponseDto.fromEntity(reservation);
     }
 
-    @CacheEvict(cacheNames = "appliedReservations", key = "@appliedReservationCachePolicy.defaultKey()")
+    @CacheEvict(cacheNames = "appliedReservations", allEntries = true)
     @Override
     @Transactional
     public ReservationResponseDto rejectReservation(
