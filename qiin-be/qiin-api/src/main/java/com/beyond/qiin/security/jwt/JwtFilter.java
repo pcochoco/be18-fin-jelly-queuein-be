@@ -63,8 +63,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
         final String token = header.substring(7);
 
+        final boolean blacklisted;
+        try {
+            blacklisted = redisTokenRepository.isBlacklisted(token);
+        } catch (final BlacklistCheckUnavailableException exception) {
+            log.error("[JwtFilter] Blacklist check unavailable; rejecting authentication", exception);
+            writeBlacklistUnavailableResponse(response);
+            return;
+        }
+
         // 블랙리스트 토큰이면 인증 없이 다음 필터로 넘김
-        if (redisTokenRepository.isBlacklisted(token)) {
+        if (blacklisted) {
             authenticationEntryPoint.commence(
                     request, response, new InsufficientAuthenticationException("블랙리스트 처리된 토큰입니다."));
             return;
@@ -105,6 +114,17 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeBlacklistUnavailableResponse(final HttpServletResponse response) throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
+
+        response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter()
+                .write("{\"status\":503,\"error\":\"SERVICE_UNAVAILABLE\",\"message\":\"인증 서비스를 일시적으로 사용할 수 없습니다.\"}");
     }
 
     private static UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(

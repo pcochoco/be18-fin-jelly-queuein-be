@@ -44,6 +44,7 @@ public class PageResponseDto<T> {
     // 정렬 정보 DTO
     @Getter
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class SortInfo {
 
         private String property; // 정렬 기준 컬럼

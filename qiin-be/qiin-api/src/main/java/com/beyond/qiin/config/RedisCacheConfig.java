@@ -3,6 +3,8 @@ package com.beyond.qiin.config;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -14,7 +16,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-public class RedisCacheConfig {
+public class RedisCacheConfig implements CachingConfigurer {
 
     @Bean
     public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
@@ -41,5 +43,12 @@ public class RedisCacheConfig {
                 .withInitialCacheConfigurations(cacheConfigurations) // 신청 예약 목록용 캐시 추가
                 .transactionAware() // 트랜잭션 커밋 성공 후 캐시에 반영
                 .build();
+    }
+
+    // redis 장애 시의 예외 처리 handler
+    @Bean
+    @Override
+    public CacheErrorHandler errorHandler() {
+        return new FailOpenCacheErrorHandler();
     }
 }
