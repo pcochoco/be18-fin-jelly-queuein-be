@@ -74,6 +74,8 @@ gradle.properties
 /qiin-be/src/main/generated/
 /qiin-be/qiin-api/src/main/generated/
 /qiin-be/qiin-notification/src/main/generated/
+# QueryDSL generated Q-types
+**/src/main/generated/
 
 ### logs
 *.log

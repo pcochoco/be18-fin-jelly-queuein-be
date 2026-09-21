@@ -2,6 +2,7 @@ package com.beyond.qiin.security.jwt;
 
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -36,6 +37,11 @@ public class RedisTokenRepository {
 
     // 블랙리스트 여부 검사
     public boolean isBlacklisted(final String accessToken) {
-        return redis.hasKey(BLACKLIST_PREFIX + accessToken);
+        try {
+            // RedisTemplate/Lettuce에 별도 retry 정책은 두지 않는다. connection factory의 500ms timeout 후 즉시 실패한다.
+            return redis.hasKey(BLACKLIST_PREFIX + accessToken);
+        } catch (DataAccessException exception) {
+            throw new BlacklistCheckUnavailableException(exception);
+        }
     }
 }
